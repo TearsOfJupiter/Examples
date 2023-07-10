@@ -1,6 +1,7 @@
 package functions;
 
 import functions.arity.TriFunction;
+import functions.arity.VariadicConsumer;
 import functions.arity.VariadicFunction;
 import functions.curry.Currier;
 import functions.curry.QuadCurriedFunction;
@@ -8,6 +9,7 @@ import functions.curry.QuadCurriedFunction;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 public class FunctionsDemo
 {
@@ -22,9 +24,9 @@ public class FunctionsDemo
     System.out.println(triFunction.apply(1, 2, 3) + " == " + 6);
     System.out.println();
 
-    // Demonstrates VariadicFunction::apply that takes var-args
-    System.out.println("Demonstrates VariadicFunction::apply that takes var-args:");
-    final VariadicFunction<Integer, Integer> vf = array -> Arrays.stream(array)
+    // Demonstrates VariadicFunction::apply(T...)
+    System.out.println("Demonstrates VariadicFunction::apply(T...):");
+    final VariadicFunction<Integer, Integer> vf = (Integer... array) -> Arrays.stream(array)
         .mapToInt(Integer::intValue)
         .sum();
     System.out.println(vf.apply(1, 2, 3, 4, 5, 6, 7, 8, 9, 10) + " == " + 55);
@@ -38,6 +40,12 @@ public class FunctionsDemo
             array -> Arrays.stream(array).mapToInt(Integer::intValue).sum())
         .apply(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
     System.out.println(sum + " == " + 55);
+    System.out.println();
+
+    // Demonstrates VariadicConsumer::accept(T...)
+    System.out.println("Demonstrates VariadicConsumer::accept(T...):");
+    final VariadicConsumer<String> printer = (String... x) -> System.out.println(String.join(" ", x));
+    printer.accept("one", "two", "three", "four");
     System.out.println();
 
     /* ****************** CURRYING ***************** */
