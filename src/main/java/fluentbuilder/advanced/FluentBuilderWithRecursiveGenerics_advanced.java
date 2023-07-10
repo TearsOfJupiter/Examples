@@ -1,3 +1,5 @@
+package fluentbuilder.advanced;
+
 class FluentBuilderWithRecursiveGenerics
 {
   public static void main(String[] args)
@@ -38,7 +40,8 @@ class Person
     this.name = name;
   }
   
-  public static class Builder extends PersonBuilder<Builder> {}
+  public static class Builder extends PersonBuilder<Builder>
+  {}
   public static Builder newPersonBuilder()
   {
     return new Builder();
@@ -69,7 +72,8 @@ class Employee extends Person
     this.company = company;
   }
   
-  public static class EmpBuilder extends EmployeeBuilder<EmpBuilder> {}
+  public static class EmpBuilder extends EmployeeBuilder<EmpBuilder>
+  {}
   public static EmpBuilder newEmployeeBuilder()
   {
     return new EmpBuilder();

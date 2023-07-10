@@ -1,15 +1,17 @@
-class FluentBuilder_wrong
+package fluentbuilder.basic;
+
+class FluentBuilderWithRecursiveGenerics
 {
   public static void main(String[] args)
   {
-    final Person person = new PersonBuilder()
+    final Person person = new PersonBuilder<>()
         .withName("John")
         .build();
     System.out.println(person);
 
     final Person employee = new EmployeeBuilder()
         .withName("Tony")
-        //.worksAt("Fluent, Inc.")
+        .worksAt("Fluent, Inc.")
         .build();
     System.out.println(employee);
   }
@@ -20,7 +22,6 @@ class Person
   String name;
   String company;
 
-  /** @noinspection unused*/
   public String getName()
   {
     return name;
@@ -30,7 +31,6 @@ class Person
     this.name = name;
   }
 
-  /** @noinspection unused*/
   public String getCompany()
   {
     return company;
@@ -50,7 +50,7 @@ class Person
   }
 }
 
-class PersonBuilder
+class PersonBuilder<SELF extends PersonBuilder<SELF>>
 {
   Person person;
 
@@ -59,10 +59,15 @@ class PersonBuilder
     person = new Person();
   }
 
-  PersonBuilder withName(String name)
+  SELF withName(String name)
   {
     person.setName(name);
-    return this;
+    return self();
+  }
+
+  SELF self()
+  {
+    return (SELF) this;
   }
 
   Person build()
@@ -71,7 +76,7 @@ class PersonBuilder
   }
 }
 
-class EmployeeBuilder extends PersonBuilder
+class EmployeeBuilder extends PersonBuilder<EmployeeBuilder>
 {
   public EmployeeBuilder()
   {
@@ -81,6 +86,12 @@ class EmployeeBuilder extends PersonBuilder
   EmployeeBuilder worksAt(String company)
   {
     person.setCompany(company);
+    return self();
+  }
+
+  @Override
+  protected EmployeeBuilder self()
+  {
     return this;
   }
 }

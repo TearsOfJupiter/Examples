@@ -1,3 +1,5 @@
+package fluentbuilder.semiadvanced;
+
 class FluentBuilderWithRecursiveGenerics_semiAdvanced
 {
   public static void main(String[] args)
@@ -30,7 +32,7 @@ class Person
   
   Person() {}
 
-  /** @noinspection unused*/
+
   public String getName()
   {
     return name;
@@ -40,7 +42,6 @@ class Person
     this.name = name;
   }
   
-  /** @noinspection unused*/
   public String getCompany()
   {
     return company;
@@ -50,7 +51,6 @@ class Person
     this.company = company;
   }
 
-  /** @noinspection unused*/
   public String getLanguage()
   {
     return language;
