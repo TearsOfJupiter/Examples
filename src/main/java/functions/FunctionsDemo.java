@@ -1,5 +1,6 @@
 package functions;
 
+import functions.arity.VariadicIntUnaryOperator;
 import functions.arity.TriFunction;
 import functions.arity.VariadicConsumer;
 import functions.arity.VariadicFunction;
@@ -9,7 +10,6 @@ import functions.curry.QuadCurriedFunction;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiFunction;
-import java.util.stream.Collectors;
 
 public class FunctionsDemo
 {
@@ -26,12 +26,20 @@ public class FunctionsDemo
 
     // Demonstrates VariadicFunction::apply(T...)
     System.out.println("Demonstrates VariadicFunction::apply(T...):");
-    final VariadicFunction<Integer, Integer> vf = (Integer... array) -> Arrays.stream(array)
+    final VariadicFunction<Integer, Integer> variadicFunction = (Integer... array) -> Arrays.stream(array)
         .mapToInt(Integer::intValue)
         .sum();
-    System.out.println(vf.apply(1, 2, 3, 4, 5, 6, 7, 8, 9, 10) + " == " + 55);
-    System.out.println(vf.apply(List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10).toArray(new Integer[0])) + " == " + 55);
-    System.out.println(vf.apply() + " == " + 0);
+    System.out.println(variadicFunction.apply(1, 2, 3, 4, 5, 6, 7, 8, 9, 10) + " == " + 55);
+    System.out.println("Demonstrates VariadicFunction::apply():");
+    System.out.println(variadicFunction.apply() + " == " + 0);
+    System.out.println();
+
+    // Demonstrates VariadicIntUnaryOperator::apply(Collection<Integer>)
+    System.out.println("Demonstrates VariadicIntUnaryOperator::apply(Collection<Integer>):");
+    final VariadicIntUnaryOperator variadicOperator = (Integer... array) -> Arrays.stream(array)
+        .mapToInt(Integer::intValue)
+        .sum();
+    System.out.println(variadicOperator.apply(List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)) + " == " + 55);
     System.out.println();
 
     // Demonstrates VariadicFunction::of(VariadicFunction) in order to immediately call .apply(...)

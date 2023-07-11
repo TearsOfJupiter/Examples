@@ -1,5 +1,6 @@
 package functions.arity;
 
+@SuppressWarnings("unchecked")
 @FunctionalInterface
 public interface VariadicConsumer<T>
 {
