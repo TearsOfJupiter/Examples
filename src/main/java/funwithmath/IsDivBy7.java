@@ -3,6 +3,9 @@ package funwithmath;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
 
+/**
+ * Inspired by <a href="https://youtu.be/UDQjn_-pDSs">Numberphile</a>
+ */
 public class IsDivBy7
 {
   public static void main(String[] args)
