@@ -7,7 +7,7 @@ public interface VariadicFunction<T, R>
   R apply(T... ts);
 
   /**
-   * This method merely wraps a variadic-function lambda in order to be immediately chained upon
+   * This method merely wraps a VariadicFunction lambda in order to be immediately chained upon
    * Example:
    *    VariadicFunction.<Integer, Integer>of(
    *            array -> Arrays.stream(array).mapToInt(Integer::intValue).sum())
