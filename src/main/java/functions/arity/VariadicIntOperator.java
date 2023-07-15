@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 @FunctionalInterface
-public interface VariadicIntUnaryOperator extends VariadicFunction<Integer, Integer>
+public interface VariadicIntOperator extends VariadicOperator<Integer>
 {
   default <C extends Collection<Integer>> Integer apply(final C collection)
   {

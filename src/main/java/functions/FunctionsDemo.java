@@ -1,15 +1,12 @@
 package functions;
 
-import functions.arity.VariadicIntUnaryOperator;
+import functions.arity.VariadicIntOperator;
 import functions.arity.TriFunction;
 import functions.arity.VariadicConsumer;
 import functions.arity.VariadicFunction;
-import functions.curry.Currier;
-import functions.curry.QuadCurriedFunction;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.BiFunction;
 
 public class FunctionsDemo
 {
@@ -35,8 +32,8 @@ public class FunctionsDemo
     System.out.println();
 
     // Demonstrates VariadicIntUnaryOperator::apply(Collection<Integer>)
-    System.out.println("Demonstrates VariadicIntUnaryOperator::apply(Collection<Integer>):");
-    final VariadicIntUnaryOperator variadicOperator = (Integer... array) -> Arrays.stream(array)
+    System.out.println("Demonstrates VariadicIntOperator::apply(Collection<Integer>):");
+    final VariadicIntOperator variadicOperator = (Integer... array) -> Arrays.stream(array)
         .mapToInt(Integer::intValue)
         .sum();
     System.out.println(variadicOperator.apply(List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)) + " == " + 55);
