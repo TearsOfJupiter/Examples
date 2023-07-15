@@ -2,8 +2,7 @@ package functions.curry;
 
 import functions.arity.TriFunction;
 
-import java.util.function.BiFunction;
-import java.util.function.Function;
+import java.util.function.*;
 
 public class Currier
 {
@@ -11,6 +10,12 @@ public class Currier
       final BiFunction<? super T, ? super U, ? extends R> biFunction)
   {
     return a -> b -> biFunction.apply(a, b);
+  }
+
+  public static IntFunction<IntUnaryOperator> curryInt(
+      final IntBinaryOperator biFunction)
+  {
+    return a -> b -> biFunction.applyAsInt(a, b);
   }
 
   public static <T, U, V, R> Function<? super T, Function<? super U, Function<? super V, ? extends R>>> curry(

@@ -55,29 +55,5 @@ public class FunctionsDemo
     final VariadicConsumer<String> printer = (String... x) -> System.out.println(String.join(" ", x));
     printer.accept("one", "two", "three", "four");
     System.out.println();
-
-    /* ****************** CURRYING ***************** */
-
-    // Demonstrates Currier::curry(BiFunction)
-    System.out.println("Demonstrates Currier::curry(BiFunction):");
-    final Integer biCurried = Currier.curry(Integer::sum)
-        .apply(1)
-        .apply(2);
-    System.out.println(biCurried + " == " + 3);
-    System.out.println();
-
-    // Demonstrates a quad-curried function, first stored applied and stored off as a BiFunction, then later finally applied
-    System.out.println("Demonstrates a quad-curried function, first stored applied and stored off as a BiFunction, then later finally applied:");
-    final QuadCurriedFunction<Integer, Integer, Integer, Integer, Integer> quadFunction =
-        (a, b) -> (c, d) -> a + b + c + d;
-    BiFunction<Integer, Integer, Integer> curried = quadFunction.apply(1, 2);
-    //...
-    Integer quadCurriedResult = curried.apply(3, 4);
-    System.out.println(quadCurriedResult + " == " + 10);
-    System.out.println();
-    Integer curriedResult = Currier.curry(quadFunction.apply(1, 2))
-        .apply(3)
-        .apply(4);
-    System.out.println(curriedResult + " == " + 10);
   }
 }
