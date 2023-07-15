@@ -12,15 +12,15 @@ public class Currier
     return a -> b -> biFunction.apply(a, b);
   }
 
-  public static IntFunction<IntUnaryOperator> curryInt(
-      final IntBinaryOperator biFunction)
-  {
-    return a -> b -> biFunction.applyAsInt(a, b);
-  }
-
   public static <T, U, V, R> Function<? super T, Function<? super U, Function<? super V, ? extends R>>> curry(
       final TriFunction<? super T, ? super U, ? super V, ? extends R> triFunction)
   {
     return a -> b -> c -> triFunction.apply(a, b, c);
+  }
+
+  public static IntFunction<IntUnaryOperator> curryInt(
+      final IntBinaryOperator biFunction)
+  {
+    return a -> b -> biFunction.applyAsInt(a, b);
   }
 }

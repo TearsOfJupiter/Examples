@@ -1,5 +1,7 @@
 package functions.curry;
 
+import functions.arity.TriFunction;
+
 import java.util.function.BiFunction;
 import java.util.function.IntBinaryOperator;
 
@@ -28,5 +30,14 @@ public class CurryDemo
         .apply(3)
         .applyAsInt(4);
     System.out.println(curriedResult + " == " + 10);
+    System.out.println();
+
+    // Demonstrates Currier::curry(TriFunction)
+    System.out.println("Demonstrates Currier::curry(TriFunction):");
+    final Integer triCurried = Currier.<Integer, Integer, Integer, Integer>curry((a, b, c) -> a + b + c)
+        .apply(1)
+        .apply(2)
+        .apply(3);
+    System.out.println(triCurried + " == 6");
   }
 }
