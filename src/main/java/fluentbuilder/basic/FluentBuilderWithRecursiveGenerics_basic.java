@@ -8,12 +8,15 @@ public class FluentBuilderWithRecursiveGenerics_basic
         .withName("John")
         .build();
     System.out.println(person);
+    assert "John".equals(person.getName());
 
     final Person employee = Person.newEmployeeBuilder()
         .withName("Tony")
         .worksAt("Fluent, Inc.")
         .build();
     System.out.println(employee);
+    assert "Tony".equals(employee.getName());
+    assert "Fluent, Inc.".equals(employee.getCompany());
   }
 }
 

@@ -14,6 +14,7 @@ public class ArityDemo
     final TriFunction<Integer, Integer, Integer, Integer> triFunction =
         (a, b, c) -> a + b + c;
     System.out.println(triFunction.apply(1, 2, 3) + " == " + 6);
+    assert triFunction.apply(1, 2, 3) == 6;
     System.out.println();
 
     // Demonstrates VariadicIntOperator::apply(T...)
@@ -24,11 +25,13 @@ public class ArityDemo
     System.out.println(variadicIntOperator.apply(1, 2, 3, 4, 5, 6, 7, 8, 9, 10) + " == " + 55);
     System.out.println("Demonstrates VariadicIntOperator::apply():");
     System.out.println(variadicIntOperator.apply() + " == " + 0);
+    assert variadicIntOperator.apply() == 0;
     System.out.println();
 
     // Demonstrates VariadicIntOperator::apply(Collection<Integer>)
     System.out.println("Demonstrates VariadicIntOperator::apply(Collection<Integer>):");
     System.out.println(variadicIntOperator.apply(List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)) + " == " + 55);
+    assert variadicIntOperator.apply(List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)) == 55;
     System.out.println();
 
     // Demonstrates VariadicIntOperator::of(VariadicIntOperator) in order to immediately call .apply(...)
@@ -37,6 +40,7 @@ public class ArityDemo
             array -> Arrays.stream(array).mapToInt(Integer::intValue).sum())
         .apply(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
     System.out.println(sum + " == " + 55);
+    assert sum == 55;
     System.out.println();
 
     // Demonstrates VariadicConsumer::accept(T...)
