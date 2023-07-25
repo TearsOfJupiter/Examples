@@ -1,7 +1,6 @@
 package funwithmath.combinatorics;
 
 import java.util.*;
-import java.util.stream.IntStream;
 
 /**
  * Solution to <a href="https://www.codewars.com/kata/5263c6999e0f40dee200059d">The observed PIN</a>
