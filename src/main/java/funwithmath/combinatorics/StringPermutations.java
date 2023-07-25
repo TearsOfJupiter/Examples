@@ -6,6 +6,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+/**
+ * Solution to <a href="https://www.codewars.com/kata/5254ca2719453dcc0b00027d">So Many Permutations!</a>
+ * Description:
+ * In this kata, your task is to create all permutations of a non-empty input string and remove duplicates, if present.
+ */
 public class StringPermutations
 {
   public static void main(String[] args)
