@@ -22,7 +22,7 @@ public class VisitorDemo
         .map(pojo -> Visitor.visit(p -> p.setBoolProp(true), pojo))
             // Demonstrates .visit(BiConsumer<T, U>, T, U)
         .map(pojo -> Visitor.visit(Pojo::setDoubleProp, pojo, 1.5))
-            // Demonstrates .of(), .visit(BiConsumer<T, U>, U), and .get()
+            // Demonstrates .of(), .visit(), and .get()
         .map(pojo -> Visitor.of(pojo)
             .visit(Pojo::setStringProp, "goodbye")
             .visit(Pojo::setIntProp, 5)
