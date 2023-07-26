@@ -26,7 +26,7 @@ public class Person
   {
     return new PersonBuilder<>();
   }
-  protected static class PersonBuilder<SELF extends PersonBuilder<SELF>>
+  protected static class PersonBuilder<PB extends PersonBuilder<PB>>
   {
     protected Person person;
 
@@ -34,16 +34,16 @@ public class Person
     {
       person = new Person();
     }
-    public SELF withName(final String name)
+    public PB withName(final String name)
     {
       person.setName(name);
       return self();
     }
 
     @SuppressWarnings("unchecked")
-    protected SELF self()
+    protected PB self()
     {
-      return (SELF) this;
+      return (PB) this;
     }
 
     public Person build()

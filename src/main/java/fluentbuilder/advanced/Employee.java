@@ -27,7 +27,7 @@ public class Employee extends Person
   {
     return new EmployeeBuilder<>();
   }
-  protected static class EmployeeBuilder<SELF extends EmployeeBuilder<SELF>> extends PersonBuilder<SELF>
+  protected static class EmployeeBuilder<EB extends EmployeeBuilder<EB>> extends PersonBuilder<EB>
   {
     protected EmployeeBuilder()
     {
@@ -39,7 +39,7 @@ public class Employee extends Person
       return (Employee) person;
     }
 
-    public SELF worksAt(final String company)
+    public EB worksAt(final String company)
     {
       getEmployee().setCompany(company);
       return self();

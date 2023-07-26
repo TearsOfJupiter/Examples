@@ -28,7 +28,7 @@ class Developer extends Employee
   {
     return new DeveloperBuilder<>();
   }
-  public static class DeveloperBuilder<SELF extends DeveloperBuilder<SELF>> extends EmployeeBuilder<DeveloperBuilder<SELF>>
+  protected static class DeveloperBuilder<DB extends DeveloperBuilder<DB>> extends EmployeeBuilder<DeveloperBuilder<DB>>
   {
     private DeveloperBuilder()
     {
@@ -40,7 +40,7 @@ class Developer extends Employee
       return (Developer) person;
     }
 
-    public DeveloperBuilder<SELF> writes(final String language)
+    public DeveloperBuilder<DB> writes(final String language)
     {
       getDeveloper().setLanguage(language);
       return self();
