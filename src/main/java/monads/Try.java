@@ -5,9 +5,22 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
-public abstract class Try<T, E extends Throwable>
+public class Try<T, E extends Throwable>
 {
+  private final T val;
+  private final E e;
+
+  private Try(final T val, final E e)
+  {
+    if (val != null && e != null)
+      throw new IllegalStateException("val and e cannot both be non-null");
+
+    this.val = val;
+    this.e = e;
+  }
+
   public static <T, E extends Throwable> Try<T, E> of(final T val)
   {
     return success(val);
@@ -39,195 +52,153 @@ public abstract class Try<T, E extends Throwable>
 
   private static <T, E extends Throwable> Try<T, E> success(final T val)
   {
-    return new Success<>(val);
+    return new Try<>(val, null);
   }
+
   private static <T, E extends Throwable> Try<T, E> failure(final E e)
   {
-    return new Failure<>(e);
+    return new Try<>(null, e);
   }
 
-  public abstract boolean isSuccessful();
-  public abstract boolean isFailure();
-  public abstract Try<T, E> onSuccess(final Consumer<? super T> consumer);
-  public abstract Try<T, E> onSuccessOrElse(final Consumer<? super T> consumer, final Runnable failureAction);
-  public abstract Try<T, E> onFailure(final Consumer<? super E> consumer);
-  public abstract T get() throws E;
-  public abstract T orElse(final T alternative);
-  public abstract T orElseGet(final Supplier<? extends T> supplier);
-  public abstract T orElseThrow() throws E;
-  public abstract Try<T, E> filter(final Predicate<? super T> predicate);
-  public abstract <U> Try<U, E> map(final Function<? super T, ? extends U> mapper);
-  public abstract <U> Try<U, E> flatMap(final Function<? super T, ? extends Try<? extends U, ? extends E>> mapper);
-
-  private static class Success<T, E extends Throwable> extends Try<T, E>
+  public T get() throws E
   {
-    private final T val;
+    if (isSuccessful())
+      return val;
+    else
+      throw e;
+  }
 
-    private Success(final T val)
-    {
-      this.val = val;
-    }
+  public boolean isSuccessful()
+  {
+    return val != null;
+  }
 
-    @Override
-    public boolean isSuccessful()
-    {
-      return true;
-    }
+  public boolean isFailure()
+  {
+    return e != null;
+  }
 
-    @Override
-    public boolean isFailure()
-    {
-      return false;
-    }
-
-    @Override
-    public Try<T, E> onSuccess(final Consumer<? super T> consumer)
-    {
+  public Try<T, E> ifSuccessful(final Consumer<? super T> consumer)
+  {
+    if (isSuccessful())
       Objects.requireNonNull(consumer).accept(val);
-      return this;
-    }
 
-    @Override
-    public Try<T, E> onSuccessOrElse(final Consumer<? super T> consumer, final Runnable failureAction)
-    {
-      onSuccess(consumer);
-      return this;
-    }
-
-    @Override
-    public Try<T, E> onFailure(final Consumer<? super E> consumer)
-    {
-      return this;
-    }
-
-    @Override
-    public T get()
-    {
-      return val;
-    }
-
-    @Override
-    public T orElse(final T alternative)
-    {
-      return val;
-    }
-
-    @Override
-    public T orElseGet(final Supplier<? extends T> supplier)
-    {
-      return val;
-    }
-
-    @Override
-    public T orElseThrow() throws E
-    {
-      return val;
-    }
-
-    @Override
-    public Try<T, E> filter(Predicate<? super T> predicate)
-    {
-      //noinspection unchecked
-      return Objects.requireNonNull(predicate).test(val)
-          ? this
-          : (Try<T, E>) new Failure<>(new IllegalArgumentException(val + " failed predicate " + predicate));
-    }
-
-    @Override
-    public <U> Try<U, E> map(final Function<? super T, ? extends U> mapper)
-    {
-      return of(Objects.requireNonNull(mapper).apply(val));
-    }
-
-    @Override
-    public <U> Try<U, E> flatMap(Function<? super T, ? extends Try<? extends U, ? extends E>> mapper)
-    {
-      //noinspection unchecked
-      return (Try<U, E>) Objects.requireNonNull(mapper).apply(val);
-    }
+    return this;
   }
 
-  private static class Failure<T, E extends Throwable> extends Try<T, E>
+  public Try<T, E> ifSuccessfulOrElse(final Consumer<? super T> consumer, final Runnable failureAction)
   {
-    private final E e;
-
-    private Failure(final E e)
+    if (isSuccessful())
     {
-      this.e = e;
+      return ifSuccessful(consumer);
     }
-
-    @Override
-    public boolean isSuccessful()
-    {
-      return false;
-    }
-
-    @Override
-    public boolean isFailure()
-    {
-      return true;
-    }
-
-    @Override
-    public Try<T, E> onSuccess(final Consumer<? super T> consumer)
-    {
-      return this;
-    }
-
-    @Override
-    public Try<T, E> onSuccessOrElse(Consumer<? super T> consumer, Runnable failureAction)
+    else
     {
       failureAction.run();
       return this;
     }
+  }
 
-    @Override
-    public Try<T, E> onFailure(final Consumer<? super E> consumer)
-    {
-      Objects.requireNonNull(consumer).accept(e);
+  public Try<T, E> ifFailure(final Consumer<? super E> consumer)
+  {
+    if (isFailure())
+      consumer.accept(e);
+
+    return this;
+  }
+
+  public Try<T, E> filter(final Predicate<? super T> predicate)
+  {
+    if (isFailure())
       return this;
-    }
+    else
+      //noinspection unchecked
+      return Objects.requireNonNull(predicate).test(val)
+          ? this
+          : (Try<T, E>) failure(new IllegalArgumentException(val + " failed predicate " + predicate));
+  }
 
-    @Override
-    public T get() throws E
-    {
+  public <U> Try<U, E> map(final Function<? super T, ? extends U> mapper)
+  {
+    return isSuccessful()
+        ? success(Objects.requireNonNull(mapper).apply(val))
+        : failure(e);
+  }
+
+  public <U> Try<U, E> flatMap(final Function<? super T, ? extends Try<? extends U, ? extends E>> mapper)
+  {
+    //noinspection unchecked
+    return isSuccessful()
+        ? (Try<U, E>) Objects.requireNonNull(mapper).apply(val)
+        : failure(e);
+  }
+
+  public Try<T, E> or(final Supplier<Try<T, E>> supplier)
+  {
+    return isSuccessful()
+        ? this
+        : Objects.requireNonNull(supplier).get();
+  }
+
+  public Stream<T> stream()
+  {
+    return isSuccessful()
+        ? Stream.of(val)
+        : Stream.empty();
+  }
+
+  public T orElse(final T alternative)
+  {
+    return isSuccessful()
+        ? val
+        : alternative;
+  }
+
+  public T orElseGet(final Supplier<? extends T> supplier)
+  {
+    return isSuccessful()
+        ? val
+        : supplier.get();
+  }
+
+  public T orElseThrow() throws E
+  {
+    if (isSuccessful())
+      return val;
+    else
       throw e;
-    }
+  }
 
-    @Override
-    public T orElse(final T alternative)
-    {
-      return alternative;
-    }
+  public T orElseThrow(final Supplier<? extends E> exceptionSupplier) throws E
+  {
+    if (isSuccessful())
+      return val;
+    else
+      throw Objects.requireNonNull(exceptionSupplier).get();
+  }
 
-    @Override
-    public T orElseGet(final Supplier<? extends T> supplier)
-    {
-      return Objects.requireNonNull(supplier).get();
-    }
+  @Override
+  public boolean equals(final Object obj)
+  {
+    if (this == obj)
+      return true;
 
-    @Override
-    public T orElseThrow() throws E
-    {
-      throw e;
-    }
+    return obj instanceof Try<?, ?> other
+        && Objects.equals(val, other.val)
+        && Objects.equals(e, other.e);
+  }
 
-    @Override
-    public Try<T, E> filter(final Predicate<? super T> predicate)
-    {
-      return this;
-    }
+  @Override
+  public int hashCode()
+  {
+    return Objects.hash(val, e);
+  }
 
-    @Override
-    public <U> Try<U, E> map(final Function<? super T, ? extends U> mapper)
-    {
-      return new Failure<>(e);
-    }
-
-    @Override
-    public <U> Try<U, E> flatMap(Function<? super T, ? extends Try<? extends U, ? extends E>> mapper)
-    {
-      return new Failure<>(e);
-    }
+  @Override
+  public String toString()
+  {
+    return isSuccessful()
+        ? ("Try[val=" + val)
+        : ("Try[e=" + e);
   }
 }
