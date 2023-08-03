@@ -1,66 +1,65 @@
 package monads;
 
+import functions.util.Pair;
+
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-public class Try<T, E extends Throwable>
+public class Try<T>
 {
   private final T val;
-  private final E e;
+  protected final Throwable e;
 
-  private Try(final T val, final E e)
+  private Try(final T val, final Throwable e)
   {
-    if (val != null && e != null)
-      throw new IllegalStateException("val and e cannot both be non-null");
-
     this.val = val;
     this.e = e;
   }
 
-  public static <T, E extends Throwable> Try<T, E> of(final T val)
+  public static <T> Try<T> of(final T val)
   {
     return success(val);
   }
-  public static <T, E extends Throwable> Try<T, E> of(final Supplier<? extends T> suppler)
+  public static <T> Try<T> of(final Supplier<? extends T> suppler)
   {
     try
     {
       return success(suppler.get());
     }
-    catch (Throwable t)
+    catch (Throwable e)
     {
-      //noinspection unchecked
-      return failure((E) t);
+      return failure(e);
     }
   }
-  public static <T, U, E extends Throwable> Try<U, E> of(final Function<? super T, ? extends U> mapper, final T val)
+  @SuppressWarnings("unchecked")
+  public static <T, U, B extends Try<U>> B of(final Function<? super T, ? extends U> mapper, final T val)
   {
     try
     {
-      return success(mapper.apply(val));
+      return (B) success(mapper.apply(val));
     }
-    catch (Throwable t)
+    catch (Throwable e)
     {
-      //noinspection unchecked
-      return failure((E) t);
+      return (B) FailureWithOriginalVal.failure(val, e);
     }
   }
 
-  private static <T, E extends Throwable> Try<T, E> success(final T val)
+  private static <T> Try<T> success(final T val)
   {
     return new Try<>(val, null);
   }
 
-  private static <T, E extends Throwable> Try<T, E> failure(final E e)
+  private static <T> Try<T> failure(final Throwable e)
   {
     return new Try<>(null, e);
   }
 
-  public T get() throws E
+  public T get() throws Throwable
   {
     if (isSuccessful())
       return val;
@@ -78,7 +77,7 @@ public class Try<T, E extends Throwable>
     return e != null;
   }
 
-  public Try<T, E> ifSuccessful(final Consumer<? super T> consumer)
+  public Try<T> ifSuccessful(final Consumer<? super T> consumer)
   {
     if (isSuccessful())
       Objects.requireNonNull(consumer).accept(val);
@@ -86,7 +85,7 @@ public class Try<T, E extends Throwable>
     return this;
   }
 
-  public Try<T, E> ifSuccessfulOrElse(final Consumer<? super T> consumer, final Runnable failureAction)
+  public Try<T> ifSuccessfulOrElse(final Consumer<? super T> consumer, final Runnable failureAction)
   {
     if (isSuccessful())
     {
@@ -99,7 +98,7 @@ public class Try<T, E extends Throwable>
     }
   }
 
-  public Try<T, E> ifFailure(final Consumer<? super E> consumer)
+  public Try<T> ifFailure(final Consumer<? super Throwable> consumer)
   {
     if (isFailure())
       consumer.accept(e);
@@ -107,33 +106,51 @@ public class Try<T, E extends Throwable>
     return this;
   }
 
-  public Try<T, E> filter(final Predicate<? super T> predicate)
+  public Optional<T> getSuccess()
+  {
+    return Optional.ofNullable(val);
+  }
+
+  public Optional<Throwable> getFailure()
+  {
+    return isFailure()
+        ? Optional.of(e)
+        : Optional.empty();
+  }
+
+  public <U> Optional<Pair<U, Throwable>> getFailurePair()
+  {
+    return isFailure()
+        ? Optional.of(Pair.of(null, e))
+        : Optional.empty();
+  }
+
+  public Try<T> filter(final Predicate<? super T> predicate)
   {
     if (isFailure())
       return this;
     else
-      //noinspection unchecked
       return Objects.requireNonNull(predicate).test(val)
           ? this
-          : (Try<T, E>) failure(new IllegalArgumentException(val + " failed predicate " + predicate));
+          : FailureWithOriginalVal.failure(val, new IllegalArgumentException(val + " failed predicate " + predicate));
   }
 
-  public <U> Try<U, E> map(final Function<? super T, ? extends U> mapper)
+  public <U> Try<U> map(final Function<? super T, ? extends U> mapper)
   {
     return isSuccessful()
-        ? success(Objects.requireNonNull(mapper).apply(val))
+        ? of(Objects.requireNonNull(mapper), val)
         : failure(e);
   }
 
-  public <U> Try<U, E> flatMap(final Function<? super T, ? extends Try<? extends U, ? extends E>> mapper)
+  public <U> Try<U> flatMap(final Function<? super T, ? extends Try<? extends U>> mapper)
   {
     //noinspection unchecked
     return isSuccessful()
-        ? (Try<U, E>) Objects.requireNonNull(mapper).apply(val)
+        ? (Try<U>) Objects.requireNonNull(mapper).apply(val)
         : failure(e);
   }
 
-  public Try<T, E> or(final Supplier<Try<T, E>> supplier)
+  public Try<T> or(final Supplier<Try<T>> supplier)
   {
     return isSuccessful()
         ? this
@@ -161,7 +178,7 @@ public class Try<T, E extends Throwable>
         : supplier.get();
   }
 
-  public T orElseThrow() throws E
+  public T orElseThrow() throws Throwable
   {
     if (isSuccessful())
       return val;
@@ -169,7 +186,7 @@ public class Try<T, E extends Throwable>
       throw e;
   }
 
-  public T orElseThrow(final Supplier<? extends E> exceptionSupplier) throws E
+  public T orElseThrow(final Supplier<? extends Throwable> exceptionSupplier) throws Throwable
   {
     if (isSuccessful())
       return val;
@@ -183,7 +200,7 @@ public class Try<T, E extends Throwable>
     if (this == obj)
       return true;
 
-    return obj instanceof Try<?, ?> other
+    return obj instanceof Try<?> other
         && Objects.equals(val, other.val)
         && Objects.equals(e, other.e);
   }
@@ -200,5 +217,42 @@ public class Try<T, E extends Throwable>
     return isSuccessful()
         ? ("Try[val=" + val)
         : ("Try[e=" + e);
+  }
+
+  /**
+   * A note about this subclass:
+   *  This class will only be instantiated in the following cases:
+   *    - a failed call to {@link Try#of(Function, Object)}
+   *    - a failed call to {@link Try#filter(Predicate)}
+   *    - a failed call to {@link Try#map(Function)}
+   *  as only in those cases would there be a non-null {@link FailureWithOriginalVal#originalVal}
+   */
+  private static class FailureWithOriginalVal<T, U> extends Try<T>
+  {
+    private final U originalVal;
+
+    private FailureWithOriginalVal(final U originalVal, final Throwable e)
+    {
+      this(null, originalVal, e);
+    }
+    private FailureWithOriginalVal(final T val, final U originalVal, final Throwable e)
+    {
+      super(val, e);
+      this.originalVal = originalVal;
+    }
+
+    private static <T, U> FailureWithOriginalVal<T, U> failure(final U originalVal, final Throwable e)
+    {
+      return new FailureWithOriginalVal<>(originalVal, e);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Optional<Pair<U, Throwable>> getFailurePair()
+    {
+      return isFailure()
+          ? Optional.of(Pair.of(originalVal, e))
+          : Optional.empty();
+    }
   }
 }

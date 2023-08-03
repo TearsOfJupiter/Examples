@@ -48,4 +48,9 @@ public class Pojo
   {
     this.boolProp = boolProp;
   }
+
+  public Double getBoobyTrap()
+  {
+    throw new RuntimeException("Run Indy!");
+  }
 }
