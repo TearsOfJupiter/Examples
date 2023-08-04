@@ -2,6 +2,7 @@ package functions.arity;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ArityDemo
 {
@@ -16,6 +17,19 @@ public class ArityDemo
     System.out.println(triFunction.apply(1, 2, 3) + " == " + 6);
     assert triFunction.apply(1, 2, 3) == 6;
     System.out.println();
+
+    // Demonstrates VariadicFunction::apply(T...)
+    System.out.println("Demonstrates VariadicFunction::apply(T...):");
+    final VariadicFunction<Integer, String> variadicFunction = (Integer... array) -> Arrays.stream(array)
+        .map(String::valueOf)
+        .collect(Collectors.joining(","));
+    String result = variadicFunction.apply(1, 2, 3, 4);
+    System.out.println(result + " == 1,2,3,4");
+    assert "1,2,3,4".equals(result);
+    System.out.println("Demonstrates VariadicFunction::apply():");
+    result = variadicFunction.apply();
+    System.out.println(result + " == ");
+    assert result.length() == 0;
 
     // Demonstrates VariadicIntOperator::apply(T...)
     System.out.println("Demonstrates VariadicIntOperator::apply(T...):");

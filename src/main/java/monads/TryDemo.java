@@ -1,14 +1,16 @@
 package monads;
 
+import functions.arity.VariadicConsumer;
+import functions.arity.VariadicFunction;
 import functions.util.Pair;
 import functions.util.Pojo;
 
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 @SuppressWarnings({"divzero", "NumericOverflow", "PointlessArithmeticExpression"})
 public class TryDemo
@@ -16,12 +18,18 @@ public class TryDemo
   public static void main(String[] args)
   {
     demoOf();
-    demoOfSupplier();
-    demoOfFunction();
+    demoOf_Supplier();
+    demoOf_Function();
+    demoOf_Consumer();
+    demoOf_VariadicConsumer();
+    demoOf_VariadicFunction();
     demoGet();
     demoIfSuccessful();
-    demoIfSuccessfulOrElse();
-    demoIfFailure();
+    demoIfSuccessfulOrElse_consumer();
+    demoIfSuccessfulOrElse_biConsumer();
+    demoIfSuccessfulOrElseDo();
+    demoIfFailure_consumer();
+    demoIfFailure_biConsumer();
     demoGetSuccess();
     demoGetFailure();
     demoGetFailurePair();
@@ -40,7 +48,7 @@ public class TryDemo
   /**
    * Demonstrates {@link Try#of(Supplier)}
    */
-  private static void demoOfSupplier()
+  private static void demoOf_Supplier()
   {
     final Try<Integer> ts = Try.of(() -> 1);
     assert ts.isSuccessful();
@@ -54,13 +62,67 @@ public class TryDemo
   /**
    * Demonstrates {@link Try#of(Function, Object)}
    */
-  private static void demoOfFunction()
+  private static void demoOf_Function()
   {
     final Try<Integer> ts = Try.of(i -> i / 1, 1);
     assert ts.isSuccessful();
     assert !ts.isFailure();
 
     final Try<Double> tf = Try.of(Pojo::getBoobyTrap, new Pojo());
+    assert !tf.isSuccessful();
+    assert tf.isFailure();
+  }
+
+  /**
+   * Demonstrates {@link Try#of(Consumer, Object)}
+   */
+  private static void demoOf_Consumer()
+  {
+    final Consumer<Integer> goodConsumer = i -> {};
+    final Consumer<Integer> badConsumer = i -> {throw new RuntimeException("kablooey!");};
+
+    final Try<Integer> ts = Try.of(goodConsumer, 1);
+    assert ts.isSuccessful();
+    assert !ts.isFailure();
+
+    final Try<Integer> tf = Try.of(badConsumer, 1);
+    assert !tf.isSuccessful();
+    assert tf.isFailure();
+  }
+
+  /**
+   * Demonstrates {@link Try#of(VariadicConsumer, Function, Object[])}
+   */
+  private static void demoOf_VariadicConsumer()
+  {
+    final VariadicConsumer<Integer> goodConsumer = vals -> {};
+    final VariadicConsumer<Integer> badConsumer = vals -> {throw new RuntimeException("kablooey!");};
+
+    final Try<List<Integer>> ts = Try.of(goodConsumer, List::of, 1, 2, 3);
+    assert ts.isSuccessful();
+    assert !ts.isFailure();
+
+    final Try<Set<Integer>> tf = Try.of(badConsumer, Set::of, 1, 2, 3);
+    assert !tf.isSuccessful();
+    assert tf.isFailure();
+  }
+
+  /**
+   * Demonstrates {@link Try#of(VariadicFunction, Object[])}
+   */
+  private static void demoOf_VariadicFunction()
+  {
+    final VariadicFunction<Integer, String> goodFunction = (Integer... array) -> Arrays.stream(array)
+        .map(String::valueOf)
+        .collect(Collectors.joining(","));
+    final VariadicFunction<Integer, String> badFunction = (Integer... array) -> {throw new RuntimeException("kablooey!");};
+
+    final Try<String> ts = Try.of(goodFunction, 1, 2, 3);
+    assert ts.isSuccessful();
+    assert !ts.isFailure();
+    assert "1,2,3".equals(ts.orElseThrow());
+
+    final Try<String> tf = Try.of(badFunction, 1, 2, 3);
     assert !tf.isSuccessful();
     assert tf.isFailure();
   }
@@ -87,7 +149,8 @@ public class TryDemo
     }
     catch (Throwable e)
     {
-      assert e instanceof ArithmeticException;
+      assert e instanceof RuntimeException;
+      assert e.getCause() instanceof ArithmeticException;
     }
   }
 
@@ -108,18 +171,64 @@ public class TryDemo
   }
 
   /**
-   * Demonstrates {@link Try#ifSuccessfulOrElse(Consumer, Runnable)}
+   * Demonstrates {@link Try#ifSuccessfulOrElse(Consumer, Consumer)}
    */
-  private static void demoIfSuccessfulOrElse()
+  private static void demoIfSuccessfulOrElse_consumer()
   {
-    final Set<Integer> ints = new HashSet<>();
+    final Consumer<Integer> goodConsumer = i -> {};
+    final Consumer<Integer> badConsumer = i -> {throw new RuntimeException();};
 
-    Try.of(() -> 2 / 1).ifSuccessfulOrElse(ints::add, () -> ints.add(-1));
+    final Set<Integer> ints = new HashSet<>();
+    final Set<Integer> failedDivisors = new HashSet<>();
+
+    Try.of(goodConsumer, 2).ifSuccessfulOrElse(ints::add, failedDivisors::add);
     assert ints.size() == 1;
     assert ints.contains(2);
 
     ints.clear();
-    Try.of(() -> 2 / 0).ifSuccessfulOrElse(ints::add, () -> ints.add(-1));
+    Try.of(badConsumer, 0).ifSuccessfulOrElse(ints::add, failedDivisors::add);
+    assert ints.size() == 0;
+    assert failedDivisors.size() == 1;
+    assert failedDivisors.iterator().next() == 0;
+  }
+
+  /**
+   * Demonstrates {@link Try#ifSuccessfulOrElse(Consumer, BiConsumer)}
+   */
+  private static void demoIfSuccessfulOrElse_biConsumer()
+  {
+    final Consumer<Integer> goodConsumer = i -> {};
+    final Consumer<Integer> badConsumer = i -> {throw new RuntimeException("kablooey!");};
+
+    final Set<Integer> ints = new HashSet<>();
+    final Set<Pair<Throwable, Integer>> failedDivisors = new HashSet<>();
+
+    Try.of(goodConsumer, 2).ifSuccessfulOrElse(ints::add, (e, i) -> failedDivisors.add(Pair.of(e, i)));
+    assert ints.size() == 1;
+    assert ints.contains(2);
+
+    ints.clear();
+    Try.of(badConsumer, 0).ifSuccessfulOrElse(ints::add, (e, i) -> failedDivisors.add(Pair.of(e, i)));
+    assert ints.size() == 0;
+    assert failedDivisors.size() == 1;
+    final Pair<Throwable, Integer> failedDivisor = failedDivisors.iterator().next();
+    assert "kablooey!".equals(failedDivisor.getA().getMessage());
+    assert failedDivisor.getB() == 0;
+  }
+
+  /**
+   * Demonstrates {@link Try#ifSuccessfulOrElseDo(Consumer, Runnable)}
+   */
+  private static void demoIfSuccessfulOrElseDo()
+  {
+    final Set<Integer> ints = new HashSet<>();
+
+    Try.of(() -> 2 / 1).ifSuccessfulOrElseDo(ints::add, () -> ints.add(-1));
+    assert ints.size() == 1;
+    assert ints.contains(2);
+
+    ints.clear();
+    Try.of(() -> 2 / 0).ifSuccessfulOrElseDo(ints::add, () -> ints.add(-1));
     assert ints.size() == 1;
     assert ints.contains(-1);
   }
@@ -127,7 +236,7 @@ public class TryDemo
   /**
    * Demonstrates {@link Try#ifFailure(Consumer)}
    */
-  private static void demoIfFailure()
+  private static void demoIfFailure_consumer()
   {
     final Set<Throwable> errors = new HashSet<>();
 
@@ -137,6 +246,31 @@ public class TryDemo
     Try.of(() -> 2 / 0).ifFailure(errors::add);
     assert !errors.isEmpty();
     assert errors.iterator().next() instanceof ArithmeticException;
+  }
+
+  /**
+   * Demonstrates {@link Try#ifFailure(BiConsumer)}
+   */
+  private static void demoIfFailure_biConsumer()
+  {
+    final Set<Throwable> errors = new HashSet<>();
+    final Set<Integer> errorDivisors = new HashSet<>();
+
+    Try.of(i -> 2 / i, 1).ifFailure((e, i) -> {
+      errors.add(e);
+      errorDivisors.add(i);
+    });
+    assert errors.isEmpty();
+    assert errorDivisors.isEmpty();
+
+    Try.of(i -> 2 / i, 0).ifFailure((e, i) -> {
+      errors.add(e);
+      errorDivisors.add(i);
+    });
+    assert !errors.isEmpty();
+    assert errors.iterator().next() instanceof ArithmeticException;
+    assert !errorDivisors.isEmpty();
+    assert errorDivisors.iterator().next() == 0;
   }
 
   /**
