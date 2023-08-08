@@ -24,7 +24,6 @@ public class Pojo
   {
     return intProp;
   }
-
   public void setIntProp(final int intProp)
   {
     this.intProp = intProp;
@@ -43,14 +42,8 @@ public class Pojo
   {
     return boolProp;
   }
-
   public void setBoolProp(final boolean boolProp)
   {
     this.boolProp = boolProp;
-  }
-
-  public Double getBoobyTrap()
-  {
-    throw new RuntimeException("Run Indy!");
   }
 }
