@@ -22,6 +22,11 @@ public class CollectionUtilsDemo
     System.out.println(CollectionUtils.defaultCollection(List.of(1, 2, 3), ArrayList::new) + " == [1, 2, 3]");
     assert CollectionUtils.defaultCollection(List.of(1, 2, 3), ArrayList::new).equals(List.of(1, 2, 3));
 
+    /* ****************** addPassThru ***************** */
+    final List<String> strings = CollectionUtils.addPassThru(new ArrayList<>(), "one");
+    assert strings.size() == 1;
+    assert "one".equals(strings.get(0));
+
     /* ****************** reverseList ***************** */
 
     // Demonstrates reverseList(null)

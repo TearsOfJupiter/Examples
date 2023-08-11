@@ -1,5 +1,7 @@
 package collections;
 
+import functions.util.Visitor;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -17,6 +19,11 @@ public class CollectionUtils
     return collection != null
         ? collection
         : defaultSupplier.get();
+  }
+
+  public static <T, C extends Collection<T>> C addPassThru(final C collection, final T t)
+  {
+    return Visitor.visit(Collection::add, collection, t);
   }
 
   public static <T> List<T> reverseList(final List<T> list)

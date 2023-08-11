@@ -1,10 +1,13 @@
 package monads;
 
+import collections.CollectionUtils;
 import functions.arity.VariadicConsumer;
 import functions.arity.VariadicFunction;
 import functions.util.ExceptionUtil;
 import functions.util.tuples.Pair;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.*;
@@ -13,6 +16,7 @@ import java.util.stream.Stream;
 public class Try<T>
 {
   protected final T val;
+  protected List<Object> states = new ArrayList<>();
 
   private Try(final T val)
   {
@@ -28,11 +32,13 @@ public class Try<T>
   {
     try
     {
-      return success(Objects.requireNonNull(suppler).get());
+      final T val = Objects.requireNonNull(suppler).get();
+      return success(val)
+          .withStates(new ArrayList<>(List.of(val)));
     }
     catch (Throwable e)
     {
-      return Failure.fail(e);
+      return Failure.fail(e, new ArrayList<>());
     }
   }
 
@@ -42,11 +48,13 @@ public class Try<T>
   {
     try
     {
-      return (V) success(Objects.requireNonNull(mapper).apply(val));
+      final U mapped = Objects.requireNonNull(mapper).apply(val);
+      return success(mapped)
+          .withStates(new ArrayList<>(List.of(mapped)));
     }
     catch (Throwable e)
     {
-      return (V) Failure.fail(val, e);
+      return (V) Failure.fail(val, e, new ArrayList<>());
     }
   }
 
@@ -56,11 +64,12 @@ public class Try<T>
     try
     {
       Objects.requireNonNull(consumer).accept(val);
-      return success(val);
+      return success(val)
+          .withStates(new ArrayList<>(List.of(val)));
     }
     catch (Throwable e)
     {
-      return Failure.fail(val, e);
+      return Failure.fail(val, e, new ArrayList<>());
     }
   }
 
@@ -71,11 +80,12 @@ public class Try<T>
     try
     {
       Objects.requireNonNull(consumer).accept(vals);
-      return success(vals);
+      return success(vals)
+          .withStates(new ArrayList<>(List.of(vals)));
     }
     catch (Throwable e)
     {
-      return Failure.fail(vals, e);
+      return Failure.fail(vals, e, new ArrayList<>());
     }
   }
 
@@ -86,17 +96,29 @@ public class Try<T>
   {
     try
     {
-      return (V) success(Objects.requireNonNull(function).apply(vals));
+      return success(Objects.requireNonNull(function).apply(vals))
+          .withStates(new ArrayList<>(List.of(vals)));
     }
     catch (Throwable e)
     {
-      return (V) Failure.fail(vals, e);
+      return (V) Failure.fail(vals, e, new ArrayList<>());
     }
   }
 
   private static <T> Try<T> success(final T val)
   {
     return new Try<>(val);
+  }
+
+  public List<Object> getStates()
+  {
+    return List.copyOf(states);
+  }
+  @SuppressWarnings("unchecked")
+  protected <V extends Try<T>> V withStates(final List<Object> states)
+  {
+    this.states = states;
+    return (V) this;
   }
 
   public T get()
@@ -119,11 +141,11 @@ public class Try<T>
     try
     {
       Objects.requireNonNull(consumer).accept(val);
-      return success(val);
+      return this;
     }
     catch (Throwable e)
     {
-      return Failure.fail(val, e);
+      return Failure.fail(val, e, states);
     }
   }
 
@@ -179,11 +201,12 @@ public class Try<T>
     {
       return Objects.requireNonNull(predicate).test(val)
           ? success(val)
-          : Failure.fail(val, Objects.requireNonNull(throwableSupplier).get());
+              .withStates(states)
+          : Failure.fail(val, Objects.requireNonNull(throwableSupplier).get(), states);
     }
     catch (Throwable e)
     {
-      return Failure.fail(val, e);
+      return Failure.fail(val, e, states);
     }
   }
 
@@ -192,11 +215,13 @@ public class Try<T>
   {
     try
     {
-      return (V) success(Objects.requireNonNull(mapper).apply(val));
+      final U mapped = Objects.requireNonNull(mapper).apply(val);
+      return success(mapped)
+          .withStates(CollectionUtils.addPassThru(states, mapped));
     }
     catch (Throwable e)
     {
-      return (V) Failure.fail(val, e);
+      return (V) Failure.fail(val, e, states);
     }
   }
 
@@ -205,11 +230,13 @@ public class Try<T>
   {
     try
     {
-      return Objects.requireNonNull(mapper).apply(val);
+      final V mappedTry = Objects.requireNonNull(mapper).apply(val);
+      return mappedTry
+          .withStates(CollectionUtils.addPassThru(states, mappedTry.val));
     }
     catch (Throwable e)
     {
-      return (V) Failure.fail(val, e);
+      return (V) Failure.fail(val, e, states);
     }
   }
 
@@ -251,20 +278,22 @@ public class Try<T>
     protected final T originalVal;
     protected final E e;
 
-    private Failure(final T originalVal, final E e)
+    private Failure(final T originalVal, final E e, final List<Object> states)
     {
       super(null);
       this.originalVal = originalVal;
       this.e = e;
+      this.states = states;
+      this.states.add(new Pair<>(e, originalVal));
     }
 
-    protected static <T, E extends Throwable> Failure<T, E> fail(final E e)
+    protected static <T, E extends Throwable> Failure<T, E> fail(final E e, final List<Object> states)
     {
-      return fail(null, e);
+      return fail(null, e, states);
     }
-    protected static <T, E extends Throwable> Failure<T, E> fail(final T originalVal, final E e)
+    protected static <T, E extends Throwable> Failure<T, E> fail(final T originalVal, final E e, final List<Object> states)
     {
-      return new Failure<>(originalVal, e);
+      return new Failure<>(originalVal, e, states);
     }
 
     @Override
@@ -302,7 +331,7 @@ public class Try<T>
       }
       catch (Throwable e)
       {
-        return Failure.fail(originalVal, e);
+        return Failure.fail(originalVal, e, states);
       }
     }
     @Override
@@ -316,7 +345,7 @@ public class Try<T>
       }
       catch (Throwable e)
       {
-        return Failure.fail(originalVal, e);
+        return Failure.fail(originalVal, e, states);
       }
     }
 
@@ -331,7 +360,7 @@ public class Try<T>
       }
       catch (Throwable e)
       {
-        return Failure.fail(originalVal, e);
+        return Failure.fail(originalVal, e, states);
       }
     }
 
@@ -345,7 +374,7 @@ public class Try<T>
       }
       catch (Throwable e)
       {
-        return Failure.fail(originalVal, e);
+        return Failure.fail(originalVal, e, states);
       }
     }
 
@@ -359,7 +388,7 @@ public class Try<T>
       }
       catch (Throwable e)
       {
-        return Failure.fail(originalVal, e);
+        return Failure.fail(originalVal, e, states);
       }
     }
 
@@ -413,11 +442,13 @@ public class Try<T>
     {
       try
       {
-        return Objects.requireNonNull(supplier).get();
+        final Try<T> t = Objects.requireNonNull(supplier).get();
+        return t
+            .withStates(CollectionUtils.addPassThru(states, t.val));
       }
       catch (Throwable e)
       {
-        return Failure.fail(originalVal, e);
+        return Failure.fail(originalVal, e, states);
       }
     }
 

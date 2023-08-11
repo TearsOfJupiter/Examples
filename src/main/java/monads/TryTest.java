@@ -689,7 +689,6 @@ public class TryTest
         .map(i -> i * 2)
         .ifSuccessful(steps::add)
         .filter(i -> i % 2 == 0)
-        .ifSuccessful(steps::add)
         .flatMap(i -> Try.ofFunction(Object::toString, i))
         .ifSuccessful(steps::add)
         .map(s -> s + "2")
@@ -703,7 +702,9 @@ public class TryTest
         .ifSuccessful(steps::add);
 
     assertTrue(ts.isSuccessful());
-    assertEquals(steps.size(), 8);
-    assertEquals(steps, List.of(1, 2, 2, "2", "22", 22, new Pair<>(KABLOOEY_EXCEPTION, 22), 10));
+    assertEquals(steps.size(), 7);
+    List<Object> expectedStates = List.of(1, 2, "2", "22", 22, new Pair<>(KABLOOEY_EXCEPTION, 22), 10);
+    assertEquals(steps, expectedStates);
+    assertEquals(ts.getStates(), expectedStates);
   }
 }
