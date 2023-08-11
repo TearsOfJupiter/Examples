@@ -1,7 +1,7 @@
 package functions.util;
 
 /**
- * With help from <a href="https://stackoverflow.com/a/39719455">...</a>
+ * With help from <a href="https://stackoverflow.com/a/39719455">StackOverflow</a>
  */
 public class ExceptionUtil
 {
