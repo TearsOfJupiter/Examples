@@ -23,7 +23,8 @@ public class Try<T>
   {
     return success(val);
   }
-  public static <T> Try<T> of(final Supplier<? extends T> suppler)
+
+  public static <T> Try<T> ofSupplier(final Supplier<? extends T> suppler)
   {
     try
     {
@@ -34,9 +35,10 @@ public class Try<T>
       return Failure.fail(e);
     }
   }
+
   @SuppressWarnings("unchecked")
-  public static <T, U, V extends Try<U>> V of(final Function<? super T, ? extends U> mapper,
-                                              final T val)
+  public static <T, U, V extends Try<U>> V ofFunction(final Function<? super T, ? extends U> mapper,
+                                                      final T val)
   {
     try
     {
@@ -47,8 +49,9 @@ public class Try<T>
       return (V) Failure.fail(val, e);
     }
   }
-  public static <T> Try<T> of(final Consumer<? super T> consumer,
-                              final T val)
+
+  public static <T> Try<T> ofConsumer(final Consumer<? super T> consumer,
+                                      final T val)
   {
     try
     {
@@ -60,9 +63,10 @@ public class Try<T>
       return Failure.fail(val, e);
     }
   }
+
   @SafeVarargs
-  public static <T> Try<T[]> of(final VariadicConsumer<T> consumer,
-                                final T... vals)
+  public static <T> Try<T[]> ofVarConsumer(final VariadicConsumer<T> consumer,
+                                           final T... vals)
   {
     try
     {
@@ -74,10 +78,11 @@ public class Try<T>
       return Failure.fail(vals, e);
     }
   }
+
   @SuppressWarnings("unchecked")
   @SafeVarargs
-  public static <T, U, V extends Try<U>> V of(final VariadicFunction<T, U> function,
-                                              final T... vals)
+  public static <T, U, V extends Try<U>> V ofVarFunction(final VariadicFunction<T, U> function,
+                                                         final T... vals)
   {
     try
     {
@@ -143,7 +148,6 @@ public class Try<T>
   {
     return this;
   }
-
   public Try<T> ifFailure(final BiConsumer<? super Throwable, ? super T> consumer)
   {
     return this;

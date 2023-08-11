@@ -1,5 +1,7 @@
 package functions.util.tuples;
 
+import java.util.Objects;
+
 public class Pair<A, B>
 {
   private final A a;
@@ -19,5 +21,16 @@ public class Pair<A, B>
   public B getB()
   {
     return b;
+  }
+
+  @Override
+  public boolean equals(Object obj)
+  {
+    if (this == obj)
+      return true;
+
+    return (obj instanceof Pair<?, ?> p) // Pattern matching, as of 17
+        && Objects.equals(a, p.a)
+        && Objects.equals(b, p.b);
   }
 }
