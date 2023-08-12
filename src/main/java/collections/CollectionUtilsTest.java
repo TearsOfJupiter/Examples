@@ -1,6 +1,7 @@
 package collections;
 
 import functions.util.tuples.Pair;
+import monads.Try;
 import org.testng.annotations.Test;
 
 import java.util.ArrayList;
@@ -12,6 +13,10 @@ import static org.testng.Assert.assertTrue;
 
 public class CollectionUtilsTest
 {
+  /* *******************************************************************************************************************
+   *                                              TEST DEFAULT METHODS
+   * ***************************************************************************************************************** */
+
   @SuppressWarnings("ConstantValue")
   @Test
   public void test_defaultList()
@@ -36,6 +41,10 @@ public class CollectionUtilsTest
     assertTrue(CollectionUtils.defaultStream(List.of(1, 2, 3)).findAny().isPresent());
   }
 
+  /* *******************************************************************************************************************
+   *                                              TEST MUTATIVE METHODS
+   * ***************************************************************************************************************** */
+
   @Test
   public void test_add()
   {
@@ -44,6 +53,10 @@ public class CollectionUtilsTest
     assertEquals(strings.get(0), "one");
   }
 
+  /* *******************************************************************************************************************
+   *                                           TEST TRANSFORMATIVE METHODS
+   * ***************************************************************************************************************** */
+
   @Test
   public void test_reverseList()
   {
@@ -51,6 +64,18 @@ public class CollectionUtilsTest
     assertTrue(CollectionUtils.reverseList(Collections.emptyList()).isEmpty());
     assertEquals(CollectionUtils.reverseList(List.of(1, 2, 3)), List.of(3, 2, 1));
   }
+
+  @Test
+  public void test_mapToList()
+  {
+    assertTrue(Try.ofSupplier(() -> CollectionUtils.mapToList(null, null)).isFailure());
+    assertTrue(CollectionUtils.<String, Integer>mapToList(null, Integer::parseInt).isEmpty());
+    assertEquals(CollectionUtils.mapToList(List.of("1", "2", "3"), Integer::parseInt), List.of(1, 2, 3));
+  }
+
+  /* *******************************************************************************************************************
+   *                                           TEST COMBINATORICS METHODS
+   * ***************************************************************************************************************** */
 
   @Test
   public void test_cartesianProduct()
