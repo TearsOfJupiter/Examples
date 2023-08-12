@@ -1,6 +1,9 @@
 package functions.util;
 
+import collections.CollectionUtils;
+
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -38,7 +41,7 @@ public class Visitor<T>
   }
 
   public static <T> T visit(final Consumer<? super T> consumer,
-      final T visited)
+                            final T visited)
   {
     consumer.accept(visited);
     return visited;
@@ -55,9 +58,18 @@ public class Visitor<T>
   @SuppressWarnings("UnusedReturnValue")
   @SafeVarargs
   public static <T> T visit(final T visited,
-                            final Consumer<T>... consumers)
+                            final Consumer<? super T>... consumers)
   {
     Arrays.asList(consumers).forEach(consumer -> consumer.accept(visited));
     return visited;
+  }
+
+  @SafeVarargs
+  public static <T, C extends Collection<? extends T>> C visitEach(final C collection,
+                                                                   final Consumer<? super T>... consumers)
+  {
+    CollectionUtils.cartesianProduct(collection, Arrays.asList(consumers))
+        .forEach(pair -> pair.getB().accept(pair.getA()));
+    return collection;
   }
 }
