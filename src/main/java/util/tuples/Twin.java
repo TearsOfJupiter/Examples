@@ -1,4 +1,4 @@
-package functions.util.tuples;
+package util.tuples;
 
 public class Twin<T> extends Pair<T, T>
 {

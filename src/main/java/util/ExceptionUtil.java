@@ -1,4 +1,4 @@
-package functions.util;
+package util;
 
 /**
  * With help from <a href="https://stackoverflow.com/a/39719455">StackOverflow</a>

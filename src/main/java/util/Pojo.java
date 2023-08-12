@@ -1,4 +1,4 @@
-package functions.util;
+package util;
 
 /**
  * This class demonstrates a POJO class that doesn't have builder-pattern "with" methods

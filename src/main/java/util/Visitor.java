@@ -1,4 +1,4 @@
-package functions.util;
+package util;
 
 import collections.CollectionUtils;
 

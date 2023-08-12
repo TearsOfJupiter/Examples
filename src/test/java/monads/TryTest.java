@@ -2,7 +2,7 @@ package monads;
 
 import functions.arity.VariadicConsumer;
 import functions.arity.VariadicFunction;
-import functions.util.tuples.Pair;
+import util.tuples.Pair;
 import org.testng.annotations.Test;
 
 import java.util.*;

@@ -1,6 +1,6 @@
 package collections;
 
-import functions.util.tuples.Pair;
+import util.tuples.Pair;
 import monads.Try;
 import org.testng.annotations.Test;
 

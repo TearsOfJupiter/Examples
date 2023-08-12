@@ -1,6 +1,8 @@
-package functions.util;
+package utils;
 
 import org.testng.annotations.Test;
+import util.Pojo;
+import util.Visitor;
 
 import java.util.List;
 import java.util.stream.Stream;

@@ -3,8 +3,8 @@ package monads;
 import collections.CollectionUtils;
 import functions.arity.VariadicConsumer;
 import functions.arity.VariadicFunction;
-import functions.util.ExceptionUtil;
-import functions.util.tuples.Pair;
+import util.ExceptionUtil;
+import util.tuples.Pair;
 
 import java.util.ArrayList;
 import java.util.List;

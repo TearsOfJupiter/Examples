@@ -1,7 +1,7 @@
 package collections;
 
-import functions.util.Visitor;
-import functions.util.tuples.Pair;
+import util.Visitor;
+import util.tuples.Pair;
 
 import java.util.*;
 import java.util.function.Function;
@@ -58,7 +58,6 @@ public class CollectionUtils
             .collect(Collectors.toList());
   }
 
-  @SuppressWarnings("DataFlowIssue")
   public static <T, U> List<U> mapToList(final Collection<T> collection,
                                          final Function<? super T, ? extends U> mapper)
   {

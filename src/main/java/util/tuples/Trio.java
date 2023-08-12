@@ -1,4 +1,4 @@
-package functions.util.tuples;
+package util.tuples;
 
 import java.util.Objects;
 
