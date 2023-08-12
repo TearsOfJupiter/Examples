@@ -105,6 +105,19 @@ public class Try<T>
     }
   }
 
+  public static Try<Void> ofRunnable(final Runnable runnable)
+  {
+    try
+    {
+      Objects.requireNonNull(runnable).run();
+      return success(null);
+    }
+    catch (Throwable e)
+    {
+      return Failure.fail(e, new ArrayList<>());
+    }
+  }
+
   private static <T> Try<T> success(final T val)
   {
     return new Try<>(val);
@@ -166,6 +179,19 @@ public class Try<T>
     return ifSuccessful(consumer);
   }
 
+  @SuppressWarnings("unchecked")
+  public <U, V extends Try<U>> V ifSuccessfulGet(final Supplier<? extends U> supplier)
+  {
+    try
+    {
+      return (V) success(Objects.requireNonNull(supplier).get());
+    }
+    catch (Throwable e)
+    {
+      return (V) Failure.fail(e, states);
+    }
+  }
+
   public Try<T> ifFailure(final Consumer<? super Throwable> consumer)
   {
     return this;
@@ -217,7 +243,7 @@ public class Try<T>
     {
       final U mapped = Objects.requireNonNull(mapper).apply(val);
       return success(mapped)
-          .withStates(CollectionUtils.addPassThru(states, mapped));
+          .withStates(CollectionUtils.add(states, mapped));
     }
     catch (Throwable e)
     {
@@ -232,7 +258,7 @@ public class Try<T>
     {
       final V mappedTry = Objects.requireNonNull(mapper).apply(val);
       return mappedTry
-          .withStates(CollectionUtils.addPassThru(states, mappedTry.val));
+          .withStates(CollectionUtils.add(states, mappedTry.val));
     }
     catch (Throwable e)
     {
@@ -364,6 +390,13 @@ public class Try<T>
       }
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public <U, V extends Try<U>> V ifSuccessfulGet(final Supplier<? extends U> supplier)
+    {
+      return (V) this;
+    }
+
     @Override
     public Try<T> ifFailure(final Consumer<? super Throwable> consumer)
     {
@@ -444,7 +477,7 @@ public class Try<T>
       {
         final Try<T> t = Objects.requireNonNull(supplier).get();
         return t
-            .withStates(CollectionUtils.addPassThru(states, t.val));
+            .withStates(CollectionUtils.add(states, t.val));
       }
       catch (Throwable e)
       {

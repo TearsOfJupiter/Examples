@@ -14,18 +14,20 @@ import static org.testng.Assert.*;
 @SuppressWarnings({"divzero", "NumericOverflow", "PointlessArithmeticExpression"})
 public class TryTest
 {
-
   private static final String KABLOOEY = "kablooey!";
   private static final RuntimeException KABLOOEY_EXCEPTION = new RuntimeException(KABLOOEY);
   private static final Consumer<Integer> KABLOOEY_CONSUMER = i -> {throw KABLOOEY_EXCEPTION;};
+  private static final Supplier<Integer> KABLOOEY_SUPPLIER = () -> {throw KABLOOEY_EXCEPTION;};
   private static final BiConsumer<Throwable, Integer> KABLOOEY_BICONSUMER = (e, i) -> {throw KABLOOEY_EXCEPTION;};
   private static final VariadicConsumer<Integer> KABLOOEY_VARCONSUMER = vals -> {throw KABLOOEY_EXCEPTION;};
-  private static final Supplier<Throwable> KABLOOEY_SUPPLIER = () -> KABLOOEY_EXCEPTION;
   private static final Supplier<Integer> KABLOOEY_INTSUPPLIER = () -> {throw KABLOOEY_EXCEPTION;};
   private static final Supplier<Try<Integer>> KABLOOEY_TRYSUPPLIER = () -> {throw KABLOOEY_EXCEPTION;};
   private static final Function<Integer, Integer> KABLOOEY_FUNCTION = i -> {throw KABLOOEY_EXCEPTION;};
   private static final VariadicFunction<Integer, String> KABLOOEY_VARFUNCTION = (Integer... array) -> {throw KABLOOEY_EXCEPTION;};
   private static final Predicate<Integer> KABLOOEY_PREDICATE = i -> {throw KABLOOEY_EXCEPTION;};
+  private static final Runnable KABLOOEY_RUNNABLE = () -> {throw KABLOOEY_EXCEPTION;};
+  private static final Supplier<Throwable> SUPPLY_KABLOOEY = () -> KABLOOEY_EXCEPTION;
+  public static final Runnable GOOD_RUNNABLE = () -> {};
   private static final Function<Integer, Try<Integer>> GOOD_FLATMAP = val -> Try.ofFunction(i -> i / 2, val);
   private static final Function<Integer, Try<Integer>> BAD_FLATMAP = val -> Try.ofFunction(i -> i / 0, val);
 
@@ -157,6 +159,22 @@ public class TryTest
     final List<Integer> tfVals = Arrays.asList(pair.getA());
     assertEquals(List.of(1, 2, 3), tfVals);
     assertEquals(pair.getB().getMessage(), KABLOOEY);
+  }
+
+  /**
+   * Demonstrates {@link Try#ofRunnable(Runnable)}
+   */
+  @Test
+  public void test_ofRunnable()
+  {
+    // Good runnable
+    final Try<Void> ts = Try.ofRunnable(GOOD_RUNNABLE);
+    assertTrue(ts.isSuccessful());
+
+    // Bad runnable
+    final Try<Void> tf = Try.ofRunnable(KABLOOEY_RUNNABLE);
+    assertTrue(tf.isFailure());
+    assertEquals(tf.getError().orElseThrow().getMessage(), KABLOOEY);
   }
 
   /**
@@ -299,6 +317,41 @@ public class TryTest
   }
 
   /**
+   * Demonstrates {@link Try#ifSuccessfulGet(Supplier)}
+   */
+  @Test
+  public void test_ifSuccessfulGet()
+  {
+    // Good runnable
+    final String two = Try.ofRunnable(GOOD_RUNNABLE)
+        .ifSuccessfulGet(() -> 2)
+        .map(String::valueOf)
+        .orElseThrow();
+    assertEquals(two, "2");
+
+    // Bad runnable
+    final Try<String> tf = Try.ofRunnable(KABLOOEY_RUNNABLE)
+        .ifSuccessfulGet(() -> 2)
+        .map(String::valueOf);
+    assertTrue(tf.isFailure());
+    assertEquals(tf.getError().orElseThrow().getMessage(), KABLOOEY);
+
+    // Good runnable, bad supplier
+    final Try<String> tf2 = Try.ofRunnable(GOOD_RUNNABLE)
+        .ifSuccessfulGet(KABLOOEY_SUPPLIER)
+        .map(String::valueOf);
+    assertTrue(tf2.isFailure());
+    assertEquals(tf2.getError().orElseThrow().getMessage(), KABLOOEY);
+
+    // Silly usage, as the originally supplied value is thrown away; for demonstrative purposes
+    final String three = Try.ofSupplier(() -> 2)
+        .ifSuccessfulGet(() -> 3)
+        .map(String::valueOf)
+        .orElseThrow();
+    assertEquals(three, "3");
+  }
+
+  /**
    * Demonstrates {@link Try#ifFailure(Consumer)}
    */
   @Test
@@ -330,18 +383,16 @@ public class TryTest
   {
     final Set<Throwable> errors = new HashSet<>();
     final Set<Integer> errorDivisors = new HashSet<>();
-
-    Try.ofFunction(i -> 2 / i, 1).ifFailure((e, i) -> {
+    final BiConsumer<Throwable, Integer> biConsumer = (e, i) -> {
       errors.add(e);
       errorDivisors.add(i);
-    });
+    };
+
+    Try.ofFunction(i -> 2 / i, 1).ifFailure(biConsumer);
     assertTrue(errors.isEmpty());
     assertTrue(errorDivisors.isEmpty());
 
-    Try.ofFunction(i -> 2 / i, 0).ifFailure((e, i) -> {
-      errors.add(e);
-      errorDivisors.add(i);
-    });
+    Try.ofFunction(i -> 2 / i, 0).ifFailure(biConsumer);
     assertFalse(errors.isEmpty());
     assertTrue(errors.iterator().next() instanceof ArithmeticException);
     assertFalse(errorDivisors.isEmpty());
@@ -465,13 +516,13 @@ public class TryTest
   {
     // Good function, good predicate, value passes predicate
     final Try<Integer> ts = Try.ofFunction(s -> Integer.parseInt(s) / 3, String.valueOf(9))
-        .filter(val -> val % 3 == 0, KABLOOEY_SUPPLIER);
+        .filter(val -> val % 3 == 0, SUPPLY_KABLOOEY);
     assertTrue(ts.isSuccessful());
     assertEquals((int) ts.orElseThrow(), 3);
 
     // Good function, good predicate, value fails predicate
     final Try<Integer> tf1 = Try.ofFunction(s -> Integer.parseInt(s) / 3, String.valueOf(9))
-        .filter(val -> val % 2 == 0, KABLOOEY_SUPPLIER);
+        .filter(val -> val % 2 == 0, SUPPLY_KABLOOEY);
     assertTrue(tf1.isFailure());
     final Pair<Object, Throwable> failure = tf1.getFailure().orElseThrow();
     assertEquals(failure.getA(), 3);
@@ -479,7 +530,7 @@ public class TryTest
 
     // Null supplier
     final Try<Integer> tf2 = Try.ofFunction(s -> Integer.parseInt(s) / 3, String.valueOf(9))
-        .filter(val -> val % 2 == 0, KABLOOEY_SUPPLIER);
+        .filter(val -> val % 2 == 0, SUPPLY_KABLOOEY);
     assertTrue(tf2.isFailure());
     final Pair<Object, Throwable> failure2 = tf1.getFailure().orElseThrow();
     assertEquals(failure2.getA(), 3);
@@ -487,7 +538,7 @@ public class TryTest
 
     // Bad function
     final Try<Integer> tf3 = Try.ofFunction(i -> Integer.parseInt(i) / 0, String.valueOf(3))
-        .filter(val -> val % 2 == 0, KABLOOEY_SUPPLIER);
+        .filter(val -> val % 2 == 0, SUPPLY_KABLOOEY);
     assertTrue(tf3.isFailure());
     final Pair<Object, Throwable> failure3 = tf3.getFailure().orElseThrow();
     assertEquals(failure3.getA(), "3");
@@ -673,10 +724,10 @@ public class TryTest
   public void test_orElseThrow_Supplier()
   {
     assertEquals((int) Try.ofFunction(i -> i / 2, 4)
-        .orElseThrow(KABLOOEY_SUPPLIER), 2);
+        .orElseThrow(SUPPLY_KABLOOEY), 2);
 
     Try.ofFunction(i -> i / 0, 4)
-        .orElseThrow(KABLOOEY_SUPPLIER);
+        .orElseThrow(SUPPLY_KABLOOEY);
   }
 
   @Test
