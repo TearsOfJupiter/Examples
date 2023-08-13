@@ -1,8 +1,6 @@
-package utils;
+package util;
 
 import org.testng.annotations.Test;
-import util.Builder;
-import util.Pojo;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;

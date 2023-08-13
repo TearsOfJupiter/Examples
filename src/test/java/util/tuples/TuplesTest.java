@@ -1,10 +1,6 @@
-package utils.tuples;
+package util.tuples;
 
 import org.testng.annotations.Test;
-import util.tuples.Pair;
-import util.tuples.Trio;
-import util.tuples.Triplet;
-import util.tuples.Twin;
 
 import static org.testng.Assert.assertEquals;
 
