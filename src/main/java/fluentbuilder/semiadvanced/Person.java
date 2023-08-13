@@ -39,8 +39,8 @@ public class Person
   {
     return "Person{" +
         "name='" + name + '\'' +
-        ", company='" + company + '\'' +
-        ", language='" + language + '\'' +
+        ((company != null && !"".equals(company)) ? ", company='" + company + '\'' : "") +
+        ((language != null && !"".equals(language)) ? ", language='" + language + '\'' : "") +
         '}';
   }
 
@@ -48,7 +48,7 @@ public class Person
   {
     return new PersonBuilder<>();
   }
-  public static class PersonBuilder<SELF extends PersonBuilder<SELF>>
+  public static class PersonBuilder<PB extends PersonBuilder<PB>>
   {
     protected Person person;
 
@@ -57,16 +57,16 @@ public class Person
       person = new Person();
     }
 
-    public SELF withName(final String name)
+    public PB withName(final String name)
     {
       person.setName(name);
       return self();
     }
 
     @SuppressWarnings("unchecked")
-    protected SELF self()
+    protected PB self()
     {
-      return (SELF) this;
+      return (PB) this;
     }
 
     public Person build()
@@ -79,14 +79,14 @@ public class Person
   {
     return new EmployeeBuilder<>();
   }
-  public static class EmployeeBuilder<SELF extends EmployeeBuilder<SELF>> extends PersonBuilder<EmployeeBuilder<SELF>>
+  public static class EmployeeBuilder<EB extends EmployeeBuilder<EB>> extends PersonBuilder<EmployeeBuilder<EB>>
   {
     private EmployeeBuilder()
     {
       person = new Person();
     }
 
-    public SELF worksAt(final String company)
+    public EB worksAt(final String company)
     {
       person.setCompany(company);
       return self();
@@ -94,9 +94,9 @@ public class Person
 
     @SuppressWarnings("unchecked")
     @Override
-    protected SELF self()
+    protected EB self()
     {
-      return (SELF) this;
+      return (EB) this;
     }
   }
 
@@ -104,14 +104,14 @@ public class Person
   {
     return new DeveloperBuilder<>();
   }
-  public static class DeveloperBuilder<SELF extends DeveloperBuilder<SELF>> extends EmployeeBuilder<DeveloperBuilder<SELF>>
+  public static class DeveloperBuilder<DB extends DeveloperBuilder<DB>> extends EmployeeBuilder<DeveloperBuilder<DB>>
   {
     private DeveloperBuilder()
     {
       person = new Person();
     }
 
-    public SELF writes(final String language)
+    public DB writes(final String language)
     {
       person.setLanguage(language);
       return self();
@@ -119,9 +119,9 @@ public class Person
 
     @SuppressWarnings("unchecked")
     @Override
-    protected SELF self()
+    protected DB self()
     {
-      return (SELF) this;
+      return (DB) this;
     }
   }
 }

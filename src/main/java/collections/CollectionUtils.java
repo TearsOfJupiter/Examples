@@ -48,6 +48,14 @@ public class CollectionUtils
    *                                              TRANSFORMATIVE METHODS
    * ***************************************************************************************************************** */
 
+  public static <T, C1 extends Collection<T>, C2 extends Collection<T>> List<T> merge(final C1 c1, final C2 c2)
+  {
+    return Stream.concat(
+          defaultStream(c1),
+          defaultStream(c2)
+        ).collect(Collectors.toCollection(ArrayList::new));
+  }
+
   public static <T> List<T> reverseList(final List<T> list)
   {
     return list == null

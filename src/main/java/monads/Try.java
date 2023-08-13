@@ -21,6 +21,7 @@ public class Try<T>
   private Try(final T val)
   {
     this.val = val;
+    states.add(val);
   }
 
   public static <T> Try<T> of(final T val)
@@ -50,11 +51,28 @@ public class Try<T>
     {
       final U mapped = Objects.requireNonNull(mapper).apply(val);
       return success(mapped)
-          .withStates(new ArrayList<>(List.of(mapped)));
+          .withStates(new ArrayList<>(List.of(val, mapped)));
     }
     catch (Throwable e)
     {
       return (V) Failure.fail(val, e, new ArrayList<>());
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  @SafeVarargs
+  public static <T, U, V extends Try<U>> V ofVarFunction(final VariadicFunction<T, U> function,
+                                                         final T... vals)
+  {
+    try
+    {
+      final U mapped = Objects.requireNonNull(function).apply(vals);
+      return success(mapped)
+          .withStates(CollectionUtils.merge(new ArrayList<>(List.of(vals)), List.of(mapped)));
+    }
+    catch (Throwable e)
+    {
+      return (V) Failure.fail(vals, e, new ArrayList<>());
     }
   }
 
@@ -86,22 +104,6 @@ public class Try<T>
     catch (Throwable e)
     {
       return Failure.fail(vals, e, new ArrayList<>());
-    }
-  }
-
-  @SuppressWarnings("unchecked")
-  @SafeVarargs
-  public static <T, U, V extends Try<U>> V ofVarFunction(final VariadicFunction<T, U> function,
-                                                         final T... vals)
-  {
-    try
-    {
-      return success(Objects.requireNonNull(function).apply(vals))
-          .withStates(new ArrayList<>(List.of(vals)));
-    }
-    catch (Throwable e)
-    {
-      return (V) Failure.fail(vals, e, new ArrayList<>());
     }
   }
 
@@ -211,7 +213,7 @@ public class Try<T>
     return Optional.empty();
   }
 
-  public <T1> Optional<Pair<T1, Throwable>> getFailure()
+  public Optional<Pair<Object, Throwable>> getFailure()
   {
     return Optional.empty();
   }
@@ -247,7 +249,7 @@ public class Try<T>
     }
     catch (Throwable e)
     {
-      return (V) Failure.fail(val, e, states);
+      return (V) Failure.fail(e, states);
     }
   }
 
@@ -258,7 +260,7 @@ public class Try<T>
     {
       final V mappedTry = Objects.requireNonNull(mapper).apply(val);
       return mappedTry
-          .withStates(CollectionUtils.add(states, mappedTry.val));
+          .withStates(CollectionUtils.merge(states, mappedTry.states));
     }
     catch (Throwable e)
     {
@@ -310,7 +312,7 @@ public class Try<T>
       this.originalVal = originalVal;
       this.e = e;
       this.states = states;
-      this.states.add(new Pair<>(e, originalVal));
+      this.states.add(new Pair<>(originalVal, e));
     }
 
     protected static <T, E extends Throwable> Failure<T, E> fail(final E e, final List<Object> states)
@@ -439,9 +441,9 @@ public class Try<T>
 
     @SuppressWarnings("unchecked")
     @Override
-    public Optional<Pair<T, Throwable>> getFailure()
+    public Optional<Pair<Object, Throwable>> getFailure()
     {
-      return Optional.of(new Pair<>(originalVal, e));
+      return Optional.of((Pair<Object, Throwable>) states.get(states.size() - 1));
     }
 
     @Override
@@ -475,13 +477,13 @@ public class Try<T>
     {
       try
       {
-        final Try<T> t = Objects.requireNonNull(supplier).get();
-        return t
-            .withStates(CollectionUtils.add(states, t.val));
+        final Try<T> altTry = Objects.requireNonNull(supplier).get();
+        return altTry
+            .withStates(CollectionUtils.merge(states, altTry.states));
       }
       catch (Throwable e)
       {
-        return Failure.fail(originalVal, e, states);
+        return Failure.fail(originalVal, e, new ArrayList<>());
       }
     }
 

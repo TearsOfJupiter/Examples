@@ -14,11 +14,6 @@ public class Recursable<I>
   {
     return func;
   }
-  @SuppressWarnings("unused")
-  public void setFunc(final I func)
-  {
-    this.func = func;
-  }
   public Recursable<I> withFunc(final I func)
   {
     this.func = func;

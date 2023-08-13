@@ -46,4 +46,9 @@ public class Pojo
   {
     this.boolProp = boolProp;
   }
+
+  public Pojo kablooey()
+  {
+    throw ExceptionUtil.throwAsUnchecked(new IllegalStateException("kablooey!"));
+  }
 }

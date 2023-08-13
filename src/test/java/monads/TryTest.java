@@ -42,13 +42,14 @@ public class TryTest
     assertTrue(t.isSuccessful());
     assertFalse(t.isFailure());
     assertEquals(t.orElseThrow(), val);
+    assertEquals(t.getStates(), List.of(1));
   }
 
   /**
    * Demonstrates {@link Try#ofSupplier(Supplier)}
    */
   @Test
-  public void test_of_Supplier()
+  public void test_ofSupplier()
   {
     final int val = 1;
     final Try<Integer> ts = Try.ofSupplier(() -> val);
@@ -56,20 +57,21 @@ public class TryTest
     assertFalse(ts.isFailure());
     assertTrue(ts.getFailure().isEmpty());
     assertEquals((int) ts.orElseThrow(), val);
+    assertEquals(ts.getStates(), List.of(1));
 
-    final Try<Integer> tf = Try.ofSupplier(() -> val / 0);
+    final Try<Integer> tf = Try.ofSupplier(KABLOOEY_SUPPLIER);
     assertFalse(tf.isSuccessful());
     assertTrue(tf.isFailure());
     final Pair<Object, Throwable> pair = tf.getFailure().orElseThrow();
     assertNull(pair.getA());
-    assertTrue(pair.getB() instanceof ArithmeticException);
+    assertEquals(pair.getB(), KABLOOEY_EXCEPTION);
   }
 
   /**
    * Demonstrates {@link Try#ofFunction(Function, Object)}
    */
   @Test
-  public void test_of_Function()
+  public void test_ofFunction()
   {
     final int val = 1;
     final Try<Integer> ts = Try.ofFunction(i -> i / 1, val);
@@ -77,20 +79,47 @@ public class TryTest
     assertFalse(ts.isFailure());
     assertTrue(ts.getFailure().isEmpty());
     assertEquals((int) ts.orElseThrow(), val);
+    assertEquals(ts.getStates(), List.of(1, 1));
 
     final Try<Integer> tf = Try.ofFunction(i -> Integer.parseInt(i) / 0, String.valueOf(val));
     assertFalse(tf.isSuccessful());
     assertTrue(tf.isFailure());
-    final Pair<String, Throwable> pair = tf.<String>getFailure().orElseThrow();
+    final Pair<Object, Throwable> pair = tf.getFailure().orElseThrow();
     assertEquals(String.valueOf(val), pair.getA());
     assertTrue(pair.getB() instanceof ArithmeticException);
+  }
+
+  /**
+   * Demonstrates {@link Try#ofVarFunction(VariadicFunction, Object[])}
+   */
+  @Test
+  public void test_ofVarFunction()
+  {
+    final VariadicFunction<Integer, String> goodFunction = (Integer... array) -> Arrays.stream(array)
+        .map(String::valueOf)
+        .collect(Collectors.joining(","));
+
+    final Try<String> ts = Try.ofVarFunction(goodFunction, 1, 2, 3);
+    assertTrue(ts.isSuccessful());
+    assertFalse(ts.isFailure());
+    assertTrue(ts.getFailure().isEmpty());
+    assertEquals(ts.orElseThrow(), "1,2,3");
+    assertEquals(ts.getStates(), List.of(1, 2, 3, "1,2,3"));
+
+    final Try<String> tf = Try.ofVarFunction(KABLOOEY_VARFUNCTION, 1, 2, 3);
+    assertFalse(tf.isSuccessful());
+    assertTrue(tf.isFailure());
+    final Pair<Object, Throwable> pair = tf.getFailure().orElseThrow();
+    final List<Integer> tfVals = Arrays.asList((Integer[]) pair.getA());
+    assertEquals(List.of(1, 2, 3), tfVals);
+    assertEquals(pair.getB().getMessage(), KABLOOEY);
   }
 
   /**
    * Demonstrates {@link Try#ofConsumer(Consumer, Object)}
    */
   @Test
-  public void test_of_Consumer()
+  public void test_ofConsumer()
   {
     final Set<Integer> ints = new HashSet<>();
     final Consumer<Integer> goodConsumer = ints::add;
@@ -101,11 +130,12 @@ public class TryTest
     assertTrue(ts.getFailure().isEmpty());
     assertTrue(ints.contains(1));
     assertEquals((int) ts.orElseThrow(), 1);
+    assertEquals(ts.getStates(), List.of(1));
 
     final Try<Integer> tf = Try.ofConsumer(KABLOOEY_CONSUMER, 1);
     assertFalse(tf.isSuccessful());
     assertTrue(tf.isFailure());
-    final Pair<Integer, Throwable> pair = tf.<Integer>getFailure().orElseThrow();
+    final Pair<Object, Throwable> pair = tf.getFailure().orElseThrow();
     assertEquals((int) pair.getA(), 1);
     assertEquals(pair.getB().getMessage(), KABLOOEY);
   }
@@ -114,7 +144,7 @@ public class TryTest
    * Demonstrates {@link Try#ofVarConsumer(VariadicConsumer, Object[])}
    */
   @Test
-  public void test_of_VariadicConsumer()
+  public void test_ofVarConsumer()
   {
     final List<Integer> ints = new ArrayList<>();
     final VariadicConsumer<Integer> goodConsumer = vals -> ints.addAll(Arrays.asList(vals));
@@ -126,38 +156,14 @@ public class TryTest
     final List<Integer> tsVals = Arrays.asList(ts.orElseThrow());
     assertEquals(List.of(1, 2, 3), tsVals);
     assertEquals(ints, tsVals);
+    assertEquals(ts.getStates(), List.of(1, 2, 3));
 
     final Try<Integer[]> tf = Try.ofVarConsumer(KABLOOEY_VARCONSUMER, 1, 2, 3);
     assertFalse(tf.isSuccessful());
     assertTrue(tf.isFailure());
-    final Pair<Integer[], Throwable> pair = tf.<Integer[]>getFailure().orElseThrow();
-    final List<Integer> tfVals = Arrays.asList(pair.getA());
+    final Pair<Object, Throwable> pair = tf.getFailure().orElseThrow();
+    final List<Integer> tfVals = Arrays.asList((Integer[]) pair.getA());
     assertEquals(tsVals, tfVals);
-    assertEquals(pair.getB().getMessage(), KABLOOEY);
-  }
-
-  /**
-   * Demonstrates {@link Try#ofVarFunction(VariadicFunction, Object[])}
-   */
-  @Test
-  public void test_of_VariadicFunction()
-  {
-    final VariadicFunction<Integer, String> goodFunction = (Integer... array) -> Arrays.stream(array)
-        .map(String::valueOf)
-        .collect(Collectors.joining(","));
-
-    final Try<String> ts = Try.ofVarFunction(goodFunction, 1, 2, 3);
-    assertTrue(ts.isSuccessful());
-    assertFalse(ts.isFailure());
-    assertTrue(ts.getFailure().isEmpty());
-    assertEquals(ts.orElseThrow(), "1,2,3");
-
-    final Try<String> tf = Try.ofVarFunction(KABLOOEY_VARFUNCTION, 1, 2, 3);
-    assertFalse(tf.isSuccessful());
-    assertTrue(tf.isFailure());
-    final Pair<Integer[], Throwable> pair = tf.<Integer[]>getFailure().orElseThrow();
-    final List<Integer> tfVals = Arrays.asList(pair.getA());
-    assertEquals(List.of(1, 2, 3), tfVals);
     assertEquals(pair.getB().getMessage(), KABLOOEY);
   }
 
@@ -185,6 +191,7 @@ public class TryTest
   {
     final Try<Integer> ts = Try.ofSupplier(() -> 1 / 1);
     assertEquals((int) ts.get(), 1);
+    assertEquals(ts.getStates(), List.of(1));
 
     final Try<Integer> tf = Try.ofSupplier(() -> 1 / 0);
     tf.get();
@@ -245,7 +252,7 @@ public class TryTest
     // Bad failure consumer
     final Try<Integer> tf = Try.ofConsumer(KABLOOEY_CONSUMER, 10).ifSuccessfulOrElse(ints::add, KABLOOEY_CONSUMER);
     assertTrue(tf.isFailure());
-    final Pair<Integer, Throwable> failure = tf.<Integer>getFailure().orElseThrow();
+    final Pair<Object, Throwable> failure = tf.getFailure().orElseThrow();
     assertEquals(failure.getA(), 10);
     assertEquals(failure.getB().getMessage(), KABLOOEY);
     assertTrue(ints.isEmpty());
@@ -283,7 +290,7 @@ public class TryTest
     // Bad failure bi-consumer
     final Try<Integer> tf = Try.ofConsumer(KABLOOEY_CONSUMER, 10).ifSuccessfulOrElse(ints::add, KABLOOEY_BICONSUMER);
     assertTrue(tf.isFailure());
-    final Pair<Integer, Throwable> failure = tf.<Integer>getFailure().orElseThrow();
+    final Pair<Object, Throwable> failure = tf.getFailure().orElseThrow();
     assertEquals(failure.getA(), 10);
     assertEquals(failure.getB().getMessage(), KABLOOEY);
     assertTrue(ints.isEmpty());
@@ -455,15 +462,11 @@ public class TryTest
     assertTrue(Try.ofFunction(i -> i / 3, 3)
         .getFailure().isEmpty());
 
-    // Demonstrates without explicit generics
     final Try<Integer> tf = Try.ofFunction(i -> i / 0, 3);
     assertTrue(tf.getFailure().isPresent());
     final Pair<Object, Throwable> failure = tf.getFailure().orElseThrow();
     assertEquals(failure.getA(), 3);
     assertTrue(failure.getB() instanceof ArithmeticException);
-
-    // Demonstrates explicit generics
-    assertEquals((int) tf.<Integer>getFailure().orElseThrow().getA(), 3);
   }
 
   /**
@@ -477,6 +480,7 @@ public class TryTest
         .filter(val -> val % 3 == 0);
     assertTrue(ts.isSuccessful());
     assertEquals((int) ts.orElseThrow(), 3);
+    assertEquals(ts.getStates(), List.of("9", 3));
 
     // Good function, good predicate, value fails predicate
     final Try<Integer> tf1 = Try.ofFunction(s -> Integer.parseInt(s) / 3, String.valueOf(9))
@@ -512,13 +516,14 @@ public class TryTest
   }
 
   @Test
-  public void test_filter_Supplier()
+  public void test_filter_withFailureSupplier()
   {
     // Good function, good predicate, value passes predicate
     final Try<Integer> ts = Try.ofFunction(s -> Integer.parseInt(s) / 3, String.valueOf(9))
         .filter(val -> val % 3 == 0, SUPPLY_KABLOOEY);
     assertTrue(ts.isSuccessful());
     assertEquals((int) ts.orElseThrow(), 3);
+    assertEquals(ts.getStates(), List.of("9", 3));
 
     // Good function, good predicate, value fails predicate
     final Try<Integer> tf1 = Try.ofFunction(s -> Integer.parseInt(s) / 3, String.valueOf(9))
@@ -552,33 +557,36 @@ public class TryTest
   public void test_map()
   {
     // Good function, good mapper
-    final int result = Try.ofFunction(i -> i / 3, 9)
-        .map(i -> i % 3)
-        .orElseThrow();
-    assertEquals(result, 0);
+    final Try<Integer> ts = Try.ofFunction(i -> i / 3, 9)
+        .map(i -> i % 3);
+    assertTrue(ts.isSuccessful());
+    assertEquals(ts.orElseThrow(), 0);
+    assertEquals(ts.getStates(), List.of(9, 3, 0));
 
     // Good function, bad mapper
     final Try<Integer> tf = Try.ofFunction(i -> i / 3, 9)
         .map(KABLOOEY_FUNCTION);
     assertTrue(tf.getFailure().isPresent());
     final Pair<Object, Throwable> failure = tf.getFailure().orElseThrow();
-    assertEquals(failure.getA(), 3);
+    assertNull(failure.getA());
     assertEquals(failure.getB().getMessage(), KABLOOEY);
+    assertEquals(tf.getStates(), List.of(9, 3, new Pair<>(null, KABLOOEY_EXCEPTION)));
 
     // Bad function, good mapper (doesn't matter)
-    final Try<Integer> tf2 = Try.ofFunction(i -> i / 0, 4)
+    final Try<Integer> tf2 = Try.ofFunction(KABLOOEY_FUNCTION, 4)
         .map(i -> i % 2);
     assertTrue(tf2.isFailure());
     final Pair<Object, Throwable> failure2 = tf2.getFailure().orElseThrow();
     assertEquals(failure2.getA(), 4);
-    assertTrue(failure2.getB() instanceof ArithmeticException);
+    assertEquals(failure2.getB(), KABLOOEY_EXCEPTION);
+    assertEquals(tf2.getStates(), List.of(new Pair<>(4, KABLOOEY_EXCEPTION)));
 
     // Null mapper
     final Try<Integer> tf3 = Try.ofFunction(i -> i / 2, 4)
         .map(null);
     assertTrue(tf3.isFailure());
     final Pair<Object, Throwable> failure3 = tf3.getFailure().orElseThrow();
-    assertEquals(failure3.getA(), 2);
+    assertNull(failure3.getA());
     assertTrue(failure3.getB() instanceof NullPointerException);
   }
 
@@ -595,6 +603,7 @@ public class TryTest
         .flatMap(GOOD_FLATMAP)
         .orElseThrow();
     assertEquals(result, 1);
+    assertEquals(t.getStates(), List.of(8, 2));
 
     // Bad flatMap
     final Try<Integer> tf = t
@@ -632,35 +641,39 @@ public class TryTest
         .or(() -> Try.ofFunction(i -> i / 4, 4));
     assertTrue(ts.isSuccessful());
     assertEquals((int) ts.orElseThrow(), 2);
+    assertEquals(ts.getStates(), List.of(4, 2));
 
-    // Good function, bad alternative Try (doesn't matter
+    // Good function, bad alternative Try (doesn't matter)
     final Try<Integer> ts2 = Try.ofFunction(i -> i / 2, 4)
-        .or(() -> Try.ofFunction(i -> i / 0, 4));
+        .or(() -> Try.ofFunction(KABLOOEY_FUNCTION, 4));
     assertTrue(ts2.isSuccessful());
     assertEquals((int) ts2.orElseThrow(), 2);
+    assertEquals(ts2.getStates(), List.of(4, 2));
 
     // Bad function, good alternative Try
-    final Try<Integer> ts3 = Try.ofFunction(i -> i / 0, 4)
+    final Try<Integer> ts3 = Try.ofFunction(KABLOOEY_FUNCTION, 4)
         .or(() -> Try.ofFunction(i -> i / 2, 4));
     assertTrue(ts3.isSuccessful());
     assertEquals((int) ts3.orElseThrow(), 2);
+    assertEquals(ts3.getStates(), List.of(new Pair<>(4, KABLOOEY_EXCEPTION), 4, 2));
 
     // Bad function, bad alternative Try
-    final Try<Integer> tf = Try.ofFunction(i -> i / 0, 1)
-        .or(() -> Try.ofFunction(i -> i / 0, 2));
+    final Try<Integer> tf = Try.ofFunction(KABLOOEY_FUNCTION, 1)
+        .or(() -> Try.ofFunction(KABLOOEY_FUNCTION, 2));
     assertTrue(tf.isFailure());
-    final Pair<Integer, Throwable> failure = tf.<Integer>getFailure().orElseThrow();
+    final Pair<Object, Throwable> failure = tf.getFailure().orElseThrow();
     assertEquals((int) failure.getA(), 2);
-    assertTrue(failure.getB() instanceof ArithmeticException);
+    assertEquals(failure.getB(), KABLOOEY_EXCEPTION);
+    assertEquals(tf.getStates(), List.of(new Pair<>(1, KABLOOEY_EXCEPTION), new Pair<>(2, KABLOOEY_EXCEPTION)));
 
     // Bad function, bad alternative supplier
-    final Try<Integer> tf2 = Try.ofFunction(i -> i / 0, 4)
+    final Try<Integer> tf2 = Try.ofFunction(KABLOOEY_FUNCTION, 4)
         .or(KABLOOEY_TRYSUPPLIER);
-    assertTrue(tf.isFailure());
     assertTrue(tf2.isFailure());
-    final Pair<Integer, Throwable> failure2 = tf2.<Integer>getFailure().orElseThrow();
+    final Pair<Object, Throwable> failure2 = tf2.getFailure().orElseThrow();
     assertEquals((int) failure2.getA(), 4);
     assertEquals(failure2.getB().getMessage(), KABLOOEY);
+    assertEquals(tf2.getStates(), List.of(new Pair<>(4, KABLOOEY_EXCEPTION)));
   }
 
   /**
@@ -733,29 +746,17 @@ public class TryTest
   @Test
   public void testComplexChaining()
   {
-    final List<Object> steps = new ArrayList<>();
-
     final Try<Integer> ts = Try.ofSupplier(() -> 1)
-        .ifSuccessful(steps::add)
         .map(i -> i * 2)
-        .ifSuccessful(steps::add)
         .filter(i -> i % 2 == 0)
         .flatMap(i -> Try.ofFunction(Object::toString, i))
-        .ifSuccessful(steps::add)
         .map(s -> s + "2")
-        .ifSuccessful(steps::add)
         .map(Integer::parseInt)
-        .ifSuccessful(steps::add)
         .map(KABLOOEY_FUNCTION)
-        .ifSuccessful(steps::add)
-        .ifFailure((e, i) -> steps.add(new Pair<>(e, i)))
-        .or(() -> Try.ofSupplier(() -> 10))
-        .ifSuccessful(steps::add);
+        .or(() -> Try.ofSupplier(() -> 10));
 
     assertTrue(ts.isSuccessful());
-    assertEquals(steps.size(), 7);
-    List<Object> expectedStates = List.of(1, 2, "2", "22", 22, new Pair<>(KABLOOEY_EXCEPTION, 22), 10);
-    assertEquals(steps, expectedStates);
+    List<Object> expectedStates = List.of(1, 2, 2, "2", "22", 22, new Pair<>(null, KABLOOEY_EXCEPTION), 10);
     assertEquals(ts.getStates(), expectedStates);
   }
 }
