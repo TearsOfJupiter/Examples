@@ -29,11 +29,11 @@ public class Try<T>
     return success(val);
   }
 
-  public static <T> Try<T> ofSupplier(final Supplier<? extends T> suppler)
+  public static <T> Try<T> ofSupplier(final Supplier<? extends T> supplier)
   {
     try
     {
-      final T val = Objects.requireNonNull(suppler).get();
+      final T val = Objects.requireNonNull(supplier).get();
       return success(val)
           .withStates(new ArrayList<>(List.of(val)));
     }
