@@ -7,7 +7,7 @@ import util.Pojo;
 import java.util.Random;
 
 import static org.mockito.Mockito.*;
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
 
 public class WhenTest
 {
@@ -262,7 +262,7 @@ public class WhenTest
       expected = equals10;
 
     final String result = When.newWhenThenApply(
-            qs -> qs.getRand() < 4,  QuadString::getA)
+                       qs -> qs.getRand() < 4,  QuadString::getA)
         .whenThenApply(qs -> qs.getRand() < 7,  QuadString::getB)
         .whenThenApply(qs -> qs.getRand() < 10, QuadString::getC)
         .elseApply(QuadString::getD)
