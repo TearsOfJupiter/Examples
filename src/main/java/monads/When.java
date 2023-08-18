@@ -29,11 +29,18 @@ public class When<T, U>
 
   private Deque<When<T, U>> getCasesDeque()
   {
-    return (Deque<When<T, U>>) cases;
+    return Optional.of(cases)
+        .filter(Deque.class::isInstance)
+        .map(c -> (Deque<When<T, U>>) c)
+        .orElseGet(() -> new ArrayDeque<>(cases));
   }
   private List<When<T, U>> getCasesList()
   {
-    return (List<When<T, U>>) cases;
+    return Optional.of(cases)
+        .filter(List.class::isInstance)
+        .map(c -> (List<When<T, U>>) c)
+        .orElseGet(() -> cases.stream()
+            .toList());
   }
   private void setCases(final Deque<When<T, U>> cases)
   {

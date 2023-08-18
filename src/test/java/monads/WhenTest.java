@@ -271,6 +271,28 @@ public class WhenTest
     assertEquals(result, expected);
   }
 
+  @Test(expectedExceptions = IllegalStateException.class, expectedExceptionsMessageRegExp = "No cases matched, and no else was defined")
+  public void test_when_thenDo_noneMatch_noElse()
+  {
+    final Runnable under4 = mock(Runnable.class);
+    final Runnable under7 = mock(Runnable.class);
+    final Runnable under10 = mock(Runnable.class);
+
+    final Pojo pojo = Builder.of(Pojo::new)
+        .with(Pojo::setIntProp, 11)
+        .build();
+
+    When.<Pojo, Runnable>newWhen(
+            p -> p.getIntProp() < 4)
+        .thenDo(under4)
+        .when(p -> p.getIntProp() < 7)
+        .thenDo(under7)
+        .when(p -> p.getIntProp() < 10)
+        .thenDo(under10)
+        .test(pojo) // No cases match...
+        .doAction(); // ...no else case, exception will be thrown
+  }
+
   private static Pojo getPojo()
   {
     return Builder.of(Pojo::new)
