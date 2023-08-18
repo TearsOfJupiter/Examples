@@ -17,6 +17,7 @@ public class When<T, U>
   private Supplier<U> supplier;
   private Consumer<U> consumer;
   private Function<T, U> function;
+  private T switchOn;
 
   private When()
   {
@@ -26,6 +27,15 @@ public class When<T, U>
   {
     this.predicate = predicate;
   }
+  private When(final T switchOn)
+  {
+    this();
+    this.switchOn = switchOn;
+  }
+
+  /* *******************************************************************************************************************
+   *                                              CASES METHODS
+   * ***************************************************************************************************************** */
 
   private Deque<When<T, U>> getCasesDeque()
   {
@@ -57,9 +67,18 @@ public class When<T, U>
     return getCasesList().get(cases.size() - 1);
   }
 
+  /* *******************************************************************************************************************
+   *                                              FUNCTIONS METHODS
+   * ***************************************************************************************************************** */
+
   private boolean hasPredicate()
   {
     return Objects.nonNull(predicate);
+  }
+
+  private boolean hasSwitchOn()
+  {
+    return Objects.nonNull(switchOn);
   }
 
   private When<T, U> withAction(final Runnable action)
@@ -85,6 +104,10 @@ public class When<T, U>
     this.function = function;
     return this;
   }
+
+  /* *******************************************************************************************************************
+   *                                              WHEN METHODS
+   * ***************************************************************************************************************** */
 
   public static <T, U> When<T, U> newWhen(final Predicate<? super T> predicate)
   {
@@ -169,6 +192,10 @@ public class When<T, U>
     return this;
   }
 
+  /* *******************************************************************************************************************
+   *                                              THEN METHODS
+   * ***************************************************************************************************************** */
+
   public When<T, U> thenDo(final Runnable runnable)
   {
     getCasesDeque().getLast().action = runnable;
@@ -192,6 +219,10 @@ public class When<T, U>
     getCasesDeque().getLast().function = function;
     return this;
   }
+
+  /* *******************************************************************************************************************
+   *                                              ELSE METHODS
+   * ***************************************************************************************************************** */
 
   public When<T, U> elseDo(final Runnable action)
   {
@@ -221,6 +252,10 @@ public class When<T, U>
     return this;
   }
 
+  /* *******************************************************************************************************************
+   *                                              TEST METHOD
+   * ***************************************************************************************************************** */
+
   public When<T, U> test(final T subject)
   {
     final Optional<When<T, U>> elseOptional = Optional.of(getLastCase())
@@ -233,6 +268,10 @@ public class When<T, U>
         .or(() -> elseOptional)
         .orElseThrow(() -> new IllegalStateException("No cases matched, and no else was defined"));
   }
+
+  /* *******************************************************************************************************************
+   *                                              TERMINAL METHODS
+   * ***************************************************************************************************************** */
 
   public void doAction()
   {
@@ -252,5 +291,48 @@ public class When<T, U>
   public U apply(final T t)
   {
     return Objects.requireNonNull(function).apply(t);
+  }
+
+  /* *******************************************************************************************************************
+   *                                              SWITCH METHODS
+   * ***************************************************************************************************************** */
+
+  public static <T, U> When<T, U> switchOn(final T switchOn)
+  {
+    return Builder.<When<T, U>>of(() -> new When<>(switchOn))
+        .with(When::setCases, new ArrayDeque<When<T, U>>())
+        .build();
+  }
+
+  public When<T, U> withCase(final T switchOn)
+  {
+    final When<T, U> when = new When<>();
+    when.switchOn = switchOn;
+    cases.add(when);
+    return this;
+  }
+  public When<T, U> withCaseThenGet(final T switchOn,
+                                    final Supplier<U> supplier)
+  {
+    final When<T, U> when = new When<>();
+    when.switchOn = switchOn;
+    when.supplier = supplier;
+    cases.add(when);
+    return this;
+  }
+
+  //todo: add withCaseThenDo, withCaseThenAccept, withCaseThenApply
+
+  public When<T, U> testSwitch()
+  {
+    final Optional<When<T, U>> defaultOptional = Optional.of(getLastCase())
+        .filter(lastCase -> lastCase.switchOn == null);
+
+    return cases.stream()
+        .filter(When::hasSwitchOn)
+        .filter(w -> Objects.equals(w.switchOn, this.switchOn))
+        .findFirst()
+        .or(() -> defaultOptional)
+        .orElseThrow(() -> new IllegalStateException("No cases matched, and no default was defined"));
   }
 }
