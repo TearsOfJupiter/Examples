@@ -37,13 +37,13 @@ public class FunctionUtils
   }
 
   @PassThru
-  public static <T, U> BiConsumer<? super T, ? super U> of(final BiConsumer<? super T, ? super U> consumer)
+  public static <T, R> BiConsumer<? super T, ? super R> of(final BiConsumer<? super T, ? super R> consumer)
   {
     return consumer;
   }
 
   @PassThru
-  public static <T, U, V> TriConsumer<? super T, ? super U, ? super V> of(final TriConsumer<? super T, ? super U, ? super V> consumer)
+  public static <T, R, V> TriConsumer<? super T, ? super R, ? super V> of(final TriConsumer<? super T, ? super R, ? super V> consumer)
   {
     return consumer;
   }

@@ -18,8 +18,8 @@ public class Builder<T>
     return builder;
   }
 
-  public <U> Builder<T> with(final BiConsumer<? super T, ? super U> consumer,
-                             final U value)
+  public <R> Builder<T> with(final BiConsumer<? super T, ? super R> consumer,
+                             final R value)
   {
     consumer.accept(this.value, value);
     return this;

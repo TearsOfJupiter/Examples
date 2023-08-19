@@ -25,7 +25,7 @@ public class VisitorTest
     final List<Pojo> pojos = Stream.of(pojo1, pojo2)
           // Demonstrates .visit(Consumer<T>, T)
         .map(pojo -> Visitor.visit(p -> p.setBoolProp(true), pojo))
-          // Demonstrates .visit(BiConsumer<T, U>, T, U)
+          // Demonstrates .visit(BiConsumer<T, R>, T, R)
         .map(pojo -> Visitor.visit(Pojo::setDoubleProp, pojo, 1.5))
           // Demonstrates .of(), .visit(), and .get()
         .map(pojo -> Visitor.of(pojo)

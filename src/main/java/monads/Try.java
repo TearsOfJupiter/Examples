@@ -44,12 +44,12 @@ public class Try<T>
   }
 
   @SuppressWarnings("unchecked")
-  public static <T, U, V extends Try<U>> V ofFunction(final Function<? super T, ? extends U> mapper,
+  public static <T, R, V extends Try<R>> V ofFunction(final Function<? super T, ? extends R> mapper,
                                                       final T val)
   {
     try
     {
-      final U mapped = Objects.requireNonNull(mapper).apply(val);
+      final R mapped = Objects.requireNonNull(mapper).apply(val);
       return success(mapped)
           .withStates(new ArrayList<>(List.of(val, mapped)));
     }
@@ -61,12 +61,12 @@ public class Try<T>
 
   @SuppressWarnings("unchecked")
   @SafeVarargs
-  public static <T, U, V extends Try<U>> V ofVarFunction(final VariadicFunction<T, U> function,
+  public static <T, R, V extends Try<R>> V ofVarFunction(final VariadicFunction<T, R> function,
                                                          final T... vals)
   {
     try
     {
-      final U mapped = Objects.requireNonNull(function).apply(vals);
+      final R mapped = Objects.requireNonNull(function).apply(vals);
       return success(mapped)
           .withStates(CollectionUtils.merge(new ArrayList<>(List.of(vals)), List.of(mapped)));
     }
@@ -182,7 +182,7 @@ public class Try<T>
   }
 
   @SuppressWarnings("unchecked")
-  public <U, V extends Try<U>> V ifSuccessfulGet(final Supplier<? extends U> supplier)
+  public <R, V extends Try<R>> V ifSuccessfulGet(final Supplier<? extends R> supplier)
   {
     try
     {
@@ -239,11 +239,11 @@ public class Try<T>
   }
 
   @SuppressWarnings("unchecked")
-  public <U, V extends Try<U>> V map(final Function<? super T, ? extends U> mapper)
+  public <R, V extends Try<R>> V map(final Function<? super T, ? extends R> mapper)
   {
     try
     {
-      final U mapped = Objects.requireNonNull(mapper).apply(val);
+      final R mapped = Objects.requireNonNull(mapper).apply(val);
       return success(mapped)
           .withStates(CollectionUtils.add(states, mapped));
     }
@@ -254,7 +254,7 @@ public class Try<T>
   }
 
   @SuppressWarnings("unchecked")
-  public <U, V extends Try<U>> V flatMap(final Function<? super T, ? extends V> mapper)
+  public <R, V extends Try<R>> V flatMap(final Function<? super T, ? extends V> mapper)
   {
     try
     {
@@ -394,7 +394,7 @@ public class Try<T>
 
     @SuppressWarnings("unchecked")
     @Override
-    public <U, V extends Try<U>> V ifSuccessfulGet(final Supplier<? extends U> supplier)
+    public <R, V extends Try<R>> V ifSuccessfulGet(final Supplier<? extends R> supplier)
     {
       return (V) this;
     }
@@ -460,14 +460,14 @@ public class Try<T>
 
     @SuppressWarnings("unchecked")
     @Override
-    public <U, V extends Try<U>> V map(final Function<? super T, ? extends U> mapper)
+    public <R, V extends Try<R>> V map(final Function<? super T, ? extends R> mapper)
     {
       return (V) this;
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public <U, V extends Try<U>> V flatMap(final Function<? super T, ? extends V> mapper)
+    public <R, V extends Try<R>> V flatMap(final Function<? super T, ? extends V> mapper)
     {
       return (V) this;
     }

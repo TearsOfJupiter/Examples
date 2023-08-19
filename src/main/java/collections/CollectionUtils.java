@@ -66,8 +66,8 @@ public class CollectionUtils
             .collect(Collectors.toList());
   }
 
-  public static <T, U> List<U> mapToList(final Collection<T> collection,
-                                         final Function<? super T, ? extends U> mapper)
+  public static <T, R> List<R> mapToList(final Collection<T> collection,
+                                         final Function<? super T, ? extends R> mapper)
   {
     return defaultStream(collection)
         .map(Objects.requireNonNull(mapper))
@@ -78,8 +78,8 @@ public class CollectionUtils
    *                                            COMBINATORICS METHODS
    * ***************************************************************************************************************** */
 
-  public static <T, U> List<Pair<? extends T, ? extends U>> cartesianProduct(final Collection<? extends T> tCollection,
-                                                                             final Collection<? extends U> uCollection)
+  public static <T, R> List<Pair<? extends T, ? extends R>> cartesianProduct(final Collection<? extends T> tCollection,
+                                                                             final Collection<? extends R> uCollection)
   {
     return defaultStream(tCollection)
         .flatMap(t -> defaultStream(uCollection)

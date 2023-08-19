@@ -28,8 +28,8 @@ public class Visitor<T>
     return visitor.withValue(value);
   }
 
-  public <U> Visitor<T> visit(final BiConsumer<? super T, ? super U> consumer,
-                              final U value)
+  public <R> Visitor<T> visit(final BiConsumer<? super T, ? super R> consumer,
+                              final R value)
   {
     consumer.accept(this.value, value);
     return this;
@@ -47,9 +47,9 @@ public class Visitor<T>
     return visited;
   }
 
-  public static <T, U> T visit(final BiConsumer<? super T, ? super U> consumer,
+  public static <T, R> T visit(final BiConsumer<? super T, ? super R> consumer,
                                final T visited,
-                               final U value)
+                               final R value)
   {
     consumer.accept(visited, value);
     return visited;

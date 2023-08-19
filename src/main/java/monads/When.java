@@ -9,14 +9,14 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-public class When<T, U>
+public class When<T, R>
 {
-  private Collection<When<T, U>> cases;
+  private Collection<When<T, R>> cases;
   private Predicate<? super T> predicate;
   private Runnable action;
-  private Supplier<U> supplier;
-  private Consumer<U> consumer;
-  private Function<T, U> function;
+  private Supplier<R> supplier;
+  private Consumer<R> consumer;
+  private Function<T, R> function;
   private T switchOn;
 
   private When()
@@ -37,22 +37,22 @@ public class When<T, U>
    *                                              CASES METHODS
    * ***************************************************************************************************************** */
 
-  private Deque<When<T, U>> getCasesDeque()
+  private Deque<When<T, R>> getCasesDeque()
   {
     return Optional.of(cases)
         .filter(Deque.class::isInstance)
-        .map(c -> (Deque<When<T, U>>) c)
+        .map(c -> (Deque<When<T, R>>) c)
         .orElseGet(() -> new ArrayDeque<>(cases));
   }
-  private List<When<T, U>> getCasesList()
+  private List<When<T, R>> getCasesList()
   {
     return Optional.of(cases)
         .filter(List.class::isInstance)
-        .map(c -> (List<When<T, U>>) c)
+        .map(c -> (List<When<T, R>>) c)
         .orElseGet(() -> cases.stream()
             .toList());
   }
-  private void setCases(final Deque<When<T, U>> cases)
+  private void setCases(final Deque<When<T, R>> cases)
   {
     this.cases = cases;
   }
@@ -62,7 +62,7 @@ public class When<T, U>
     cases = cases.stream().toList();
   }
 
-  private When<T, U> getLastCase()
+  private When<T, R> getLastCase()
   {
     return getCasesList().get(cases.size() - 1);
   }
@@ -81,25 +81,25 @@ public class When<T, U>
     return Objects.nonNull(switchOn);
   }
 
-  private When<T, U> withAction(final Runnable action)
+  private When<T, R> withAction(final Runnable action)
   {
     this.action = action;
     return this;
   }
 
-  private When<T, U> withSupplier(final Supplier<U> supplier)
+  private When<T, R> withSupplier(final Supplier<R> supplier)
   {
     this.supplier = supplier;
     return this;
   }
 
-  private When<T, U> withConsumer(final Consumer<U> consumer)
+  private When<T, R> withConsumer(final Consumer<R> consumer)
   {
     this.consumer = consumer;
     return this;
   }
 
-  private When<T, U> withFunction(final Function<T, U> function)
+  private When<T, R> withFunction(final Function<T, R> function)
   {
     this.function = function;
     return this;
@@ -109,86 +109,86 @@ public class When<T, U>
    *                                              WHEN METHODS
    * ***************************************************************************************************************** */
 
-  public static <T, U> When<T, U> newWhen(final Predicate<? super T> predicate)
+  public static <T, R> When<T, R> newWhen(final Predicate<? super T> predicate)
   {
-    final Deque<When<T, U>> queue = new ArrayDeque<>();
+    final Deque<When<T, R>> queue = new ArrayDeque<>();
     queue.add(new When<>(predicate));
-    return Builder.<When<T, U>>of(When::new)
+    return Builder.<When<T, R>>of(When::new)
         .with(When::setCases, queue)
         .build();
   }
 
-  public static <T, U> When<T, U> newWhenThenDo(final Predicate<? super T> predicate,
+  public static <T, R> When<T, R> newWhenThenDo(final Predicate<? super T> predicate,
                                                 final Runnable action)
   {
-    final Deque<When<T, U>> queue = new ArrayDeque<>();
-    queue.add(new When<T, U>(predicate).withAction(action));
-    return Builder.<When<T, U>>of(When::new)
+    final Deque<When<T, R>> queue = new ArrayDeque<>();
+    queue.add(new When<T, R>(predicate).withAction(action));
+    return Builder.<When<T, R>>of(When::new)
         .with(When::setCases, queue)
         .build();
   }
 
-  public static <T, U> When<T, U> newWhenThenGet(final Predicate<? super T> predicate,
-                                                 final Supplier<U> supplier)
+  public static <T, R> When<T, R> newWhenThenGet(final Predicate<? super T> predicate,
+                                                 final Supplier<R> supplier)
   {
-    final Deque<When<T, U>> queue = new ArrayDeque<>();
-    queue.add(new When<T, U>(predicate).withSupplier(supplier));
-    return Builder.<When<T, U>>of(When::new)
+    final Deque<When<T, R>> queue = new ArrayDeque<>();
+    queue.add(new When<T, R>(predicate).withSupplier(supplier));
+    return Builder.<When<T, R>>of(When::new)
         .with(When::setCases, queue)
         .build();
   }
 
-  public static <T, U> When<T, U> newWhenThenAccept(final Predicate<? super T> predicate,
-                                                    final Consumer<U> consumer)
+  public static <T, R> When<T, R> newWhenThenAccept(final Predicate<? super T> predicate,
+                                                    final Consumer<R> consumer)
   {
-    final Deque<When<T, U>> queue = new ArrayDeque<>();
-    queue.add(new When<T, U>(predicate).withConsumer(consumer));
-    return Builder.<When<T, U>>of(When::new)
+    final Deque<When<T, R>> queue = new ArrayDeque<>();
+    queue.add(new When<T, R>(predicate).withConsumer(consumer));
+    return Builder.<When<T, R>>of(When::new)
         .with(When::setCases, queue)
         .build();
   }
 
-  public static <T, U> When<T, U> newWhenThenApply(final Predicate<? super T> predicate,
-                                                   final Function<T, U> function)
+  public static <T, R> When<T, R> newWhenThenApply(final Predicate<? super T> predicate,
+                                                   final Function<T, R> function)
   {
-    final Deque<When<T, U>> queue = new ArrayDeque<>();
-    queue.add(new When<T, U>(predicate).withFunction(function));
-    return Builder.<When<T, U>>of(When::new)
+    final Deque<When<T, R>> queue = new ArrayDeque<>();
+    queue.add(new When<T, R>(predicate).withFunction(function));
+    return Builder.<When<T, R>>of(When::new)
         .with(When::setCases, queue)
         .build();
   }
 
-  public When<T, U> when(final Predicate<? super T> predicate)
+  public When<T, R> when(final Predicate<? super T> predicate)
   {
     CollectionUtils.add(cases, new When<>(predicate));
     return this;
   }
 
-  public When<T, U> whenThenDo(final Predicate<? super T> predicate,
+  public When<T, R> whenThenDo(final Predicate<? super T> predicate,
                                final Runnable action)
   {
-    CollectionUtils.add(cases, new When<T, U>(predicate).withAction(action));
+    CollectionUtils.add(cases, new When<T, R>(predicate).withAction(action));
     return this;
   }
 
-  public When<T, U> whenThenGet(final Predicate<? super T> predicate,
-                                final Supplier<U> supplier)
+  public When<T, R> whenThenGet(final Predicate<? super T> predicate,
+                                final Supplier<R> supplier)
   {
-    CollectionUtils.add(cases, new When<T, U>(predicate).withSupplier(supplier));
+    CollectionUtils.add(cases, new When<T, R>(predicate).withSupplier(supplier));
     return this;
   }
 
-  public When<T, U> whenThenAccept(final Predicate<? super T> predicate,
-                                   final Consumer<U> consumer)
+  public When<T, R> whenThenAccept(final Predicate<? super T> predicate,
+                                   final Consumer<R> consumer)
   {
-    CollectionUtils.add(cases, new When<T, U>(predicate).withConsumer(consumer));
+    CollectionUtils.add(cases, new When<T, R>(predicate).withConsumer(consumer));
     return this;
   }
 
-  public When<T, U> whenThenApply(final Predicate<? super T> predicate,
-                                  final Function<T, U> function)
+  public When<T, R> whenThenApply(final Predicate<? super T> predicate,
+                                  final Function<T, R> function)
   {
-    CollectionUtils.add(cases, new When<T, U>(predicate).withFunction(function));
+    CollectionUtils.add(cases, new When<T, R>(predicate).withFunction(function));
     return this;
   }
 
@@ -196,25 +196,25 @@ public class When<T, U>
    *                                              THEN METHODS
    * ***************************************************************************************************************** */
 
-  public When<T, U> thenDo(final Runnable runnable)
+  public When<T, R> thenDo(final Runnable runnable)
   {
     getCasesDeque().getLast().action = runnable;
     return this;
   }
 
-  public When<T, U> thenGet(final Supplier<U> supplier)
+  public When<T, R> thenGet(final Supplier<R> supplier)
   {
     getCasesDeque().getLast().supplier = supplier;
     return this;
   }
 
-  public When<T, U> thenAccept(final Consumer<U> consumer)
+  public When<T, R> thenAccept(final Consumer<R> consumer)
   {
     getCasesDeque().getLast().consumer = consumer;
     return this;
   }
 
-  public When<T, U> thenApply(final Function<T, U> function)
+  public When<T, R> thenApply(final Function<T, R> function)
   {
     getCasesDeque().getLast().function = function;
     return this;
@@ -224,30 +224,30 @@ public class When<T, U>
    *                                              ELSE METHODS
    * ***************************************************************************************************************** */
 
-  public When<T, U> elseDo(final Runnable action)
+  public When<T, R> elseDo(final Runnable action)
   {
-    cases.add(new When<T, U>().withAction(action));
+    cases.add(new When<T, R>().withAction(action));
     lockCases();
     return this;
   }
 
-  public When<T, U> elseGet(final Supplier<U> supplier)
+  public When<T, R> elseGet(final Supplier<R> supplier)
   {
-    cases.add(new When<T, U>().withSupplier(supplier));
+    cases.add(new When<T, R>().withSupplier(supplier));
     lockCases();
     return this;
   }
 
-  public When<T, U> elseAccept(final Consumer<U> consumer)
+  public When<T, R> elseAccept(final Consumer<R> consumer)
   {
-    cases.add(new When<T, U>().withConsumer(consumer));
+    cases.add(new When<T, R>().withConsumer(consumer));
     lockCases();
     return this;
   }
 
-  public When<T, U> elseApply(final Function<T, U> function)
+  public When<T, R> elseApply(final Function<T, R> function)
   {
-    cases.add(new When<T, U>().withFunction(function));
+    cases.add(new When<T, R>().withFunction(function));
     lockCases();
     return this;
   }
@@ -256,9 +256,9 @@ public class When<T, U>
    *                                              TEST METHOD
    * ***************************************************************************************************************** */
 
-  public When<T, U> test(final T subject)
+  public When<T, R> test(final T subject)
   {
-    final Optional<When<T, U>> elseOptional = Optional.of(getLastCase())
+    final Optional<When<T, R>> elseOptional = Optional.of(getLastCase())
         .filter(lastCase -> lastCase.predicate == null);
 
     return cases.stream()
@@ -278,17 +278,17 @@ public class When<T, U>
     Objects.requireNonNull(action).run();
   }
 
-  public U get()
+  public R get()
   {
     return Objects.requireNonNull(supplier).get();
   }
 
-  public void accept(final U u)
+  public void accept(final R r)
   {
-    Objects.requireNonNull(consumer).accept(u);
+    Objects.requireNonNull(consumer).accept(r);
   }
 
-  public U apply(final T t)
+  public R apply(final T t)
   {
     return Objects.requireNonNull(function).apply(t);
   }
@@ -297,24 +297,24 @@ public class When<T, U>
    *                                              SWITCH METHODS
    * ***************************************************************************************************************** */
 
-  public static <T, U> When<T, U> switchOn(final T switchOn)
+  public static <T, R> When<T, R> switchOn(final T switchOn)
   {
-    return Builder.<When<T, U>>of(() -> new When<>(switchOn))
-        .with(When::setCases, new ArrayDeque<When<T, U>>())
+    return Builder.<When<T, R>>of(() -> new When<>(switchOn))
+        .with(When::setCases, new ArrayDeque<When<T, R>>())
         .build();
   }
 
-  public When<T, U> withCase(final T switchOn)
+  public When<T, R> withCase(final T switchOn)
   {
-    final When<T, U> when = new When<>();
+    final When<T, R> when = new When<>();
     when.switchOn = switchOn;
     cases.add(when);
     return this;
   }
-  public When<T, U> withCaseThenGet(final T switchOn,
-                                    final Supplier<U> supplier)
+  public When<T, R> withCaseThenGet(final T switchOn,
+                                    final Supplier<R> supplier)
   {
-    final When<T, U> when = new When<>();
+    final When<T, R> when = new When<>();
     when.switchOn = switchOn;
     when.supplier = supplier;
     cases.add(when);
@@ -323,9 +323,9 @@ public class When<T, U>
 
   //todo: add withCaseThenDo, withCaseThenAccept, withCaseThenApply
 
-  public When<T, U> testSwitch()
+  public When<T, R> testSwitch()
   {
-    final Optional<When<T, U>> defaultOptional = Optional.of(getLastCase())
+    final Optional<When<T, R>> defaultOptional = Optional.of(getLastCase())
         .filter(lastCase -> lastCase.switchOn == null);
 
     return cases.stream()
