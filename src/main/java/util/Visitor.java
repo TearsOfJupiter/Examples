@@ -22,12 +22,18 @@ public class Visitor<T>
     return this;
   }
 
+  /**
+   * Instantiates a visitor upon which chained {@link Visitor#visit(BiConsumer, Object)} calls can be made
+   */
   public static <T> Visitor<T> of(final T value)
   {
-    final Visitor<T> visitor = new Visitor<>();
-    return visitor.withValue(value);
+    return new Visitor<T>()
+        .withValue(value);
   }
 
+  /**
+   * NOTE: Needs to be used in conjuction with {@link Visitor#of(Object)}
+   */
   public <R> Visitor<T> visit(final BiConsumer<? super T, ? super R> consumer,
                               final R value)
   {
