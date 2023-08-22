@@ -3,6 +3,7 @@ package monads;
 import collections.CollectionUtils;
 import functions.arity.VariadicConsumer;
 import functions.arity.VariadicFunction;
+import org.apache.commons.lang3.function.*;
 import util.ExceptionUtil;
 import util.tuples.Pair;
 
@@ -10,7 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.*;
 import java.util.stream.Stream;
 
 public class Try<T>
@@ -29,7 +29,7 @@ public class Try<T>
     return success(val);
   }
 
-  public static <T> Try<T> ofSupplier(final Supplier<? extends T> supplier)
+  public static <T> Try<T> ofSupplier(final FailableSupplier<? extends T, ? extends Throwable> supplier)
   {
     try
     {
@@ -44,7 +44,7 @@ public class Try<T>
   }
 
   @SuppressWarnings("unchecked")
-  public static <T, R, V extends Try<R>> V ofFunction(final Function<? super T, ? extends R> mapper,
+  public static <T, R, V extends Try<R>> V ofFunction(final FailableFunction<? super T, ? extends R, ? extends Throwable> mapper,
                                                       final T val)
   {
     try
@@ -76,7 +76,7 @@ public class Try<T>
     }
   }
 
-  public static <T> Try<T> ofConsumer(final Consumer<? super T> consumer,
+  public static <T> Try<T> ofConsumer(final FailableConsumer<? super T, ? extends Throwable> consumer,
                                       final T val)
   {
     try
@@ -107,7 +107,7 @@ public class Try<T>
     }
   }
 
-  public static Try<Void> ofRunnable(final Runnable runnable)
+  public static Try<Void> ofRunnable(final FailableRunnable<? extends Throwable> runnable)
   {
     try
     {
@@ -151,7 +151,7 @@ public class Try<T>
     return false;
   }
 
-  public Try<T> ifSuccessful(final Consumer<? super T> consumer)
+  public Try<T> ifSuccessful(final FailableConsumer<? super T, ? extends Throwable> consumer)
   {
     try
     {
@@ -164,25 +164,25 @@ public class Try<T>
     }
   }
 
-  public Try<T> ifSuccessfulOrElse(final Consumer<? super T> consumer,
-                                   final Consumer<? super T> failureConsumer)
+  public Try<T> ifSuccessfulOrElse(final FailableConsumer<? super T, ? extends Throwable> consumer,
+                                   final FailableConsumer<? super T, ? extends Throwable> failureConsumer)
   {
     return ifSuccessful(consumer);
   }
-  public Try<T> ifSuccessfulOrElse(final Consumer<? super T> consumer,
-                                   final BiConsumer<? super Throwable, ? super T> failureConsumer)
+  public Try<T> ifSuccessfulOrElse(final FailableConsumer<? super T, ? extends Throwable> consumer,
+                                   final FailableBiConsumer<? super Throwable, ? super T, ? extends Throwable> failureConsumer)
   {
     return ifSuccessful(consumer);
   }
 
-  public Try<T> ifSuccessfulOrElseDo(final Consumer<? super T> consumer,
-                                     final Runnable failureAction)
+  public Try<T> ifSuccessfulOrElseDo(final FailableConsumer<? super T, ? extends Throwable> consumer,
+                                     final FailableRunnable<? extends Throwable> failureAction)
   {
     return ifSuccessful(consumer);
   }
 
   @SuppressWarnings("unchecked")
-  public <R, V extends Try<R>> V ifSuccessfulGet(final Supplier<? extends R> supplier)
+  public <R, V extends Try<R>> V ifSuccessfulGet(final FailableSupplier<? extends R, ? extends Throwable> supplier)
   {
     try
     {
@@ -194,11 +194,11 @@ public class Try<T>
     }
   }
 
-  public Try<T> ifFailure(final Consumer<? super Throwable> consumer)
+  public Try<T> ifFailure(final FailableConsumer<? super Throwable, ? extends Throwable> consumer)
   {
     return this;
   }
-  public Try<T> ifFailure(final BiConsumer<? super Throwable, ? super T> consumer)
+  public Try<T> ifFailure(final FailableBiConsumer<? super Throwable, ? super T, ? extends Throwable> consumer)
   {
     return this;
   }
@@ -218,12 +218,12 @@ public class Try<T>
     return Optional.empty();
   }
 
-  public Try<T> filter(final Predicate<? super T> predicate)
+  public Try<T> filter(final FailablePredicate<? super T, ? extends Throwable> predicate)
   {
     return filter(predicate, () -> new IllegalArgumentException(val + " failed predicate"));
   }
-  public Try<T> filter(final Predicate<? super T> predicate,
-                       final Supplier<? extends Throwable> throwableSupplier)
+  public Try<T> filter(final FailablePredicate<? super T, ? extends Throwable> predicate,
+                       final FailableSupplier<? extends Throwable, ? extends Throwable> throwableSupplier)
   {
     try
     {
@@ -239,7 +239,7 @@ public class Try<T>
   }
 
   @SuppressWarnings("unchecked")
-  public <R, V extends Try<R>> V map(final Function<? super T, ? extends R> mapper)
+  public <R, V extends Try<R>> V map(final FailableFunction<? super T, ? extends R, ? extends Throwable> mapper)
   {
     try
     {
@@ -254,7 +254,7 @@ public class Try<T>
   }
 
   @SuppressWarnings("unchecked")
-  public <R, V extends Try<R>> V flatMap(final Function<? super T, ? extends V> mapper)
+  public <R, V extends Try<R>> V flatMap(final FailableFunction<? super T, ? extends V, ? extends Throwable> mapper)
   {
     try
     {
@@ -268,7 +268,7 @@ public class Try<T>
     }
   }
 
-  public Try<T> or(final Supplier<Try<T>> supplier)
+  public Try<T> or(final FailableSupplier<? extends Try<T>, ? extends Throwable> supplier)
   {
     return this;
   }
@@ -283,7 +283,7 @@ public class Try<T>
     return val;
   }
 
-  public T orElseGet(final Supplier<? extends T> supplier)
+  public T orElseGet(final FailableSupplier<? extends T, ? extends Throwable> supplier)
   {
     return val;
   }
@@ -292,7 +292,7 @@ public class Try<T>
   {
     return val;
   }
-  public T orElseThrow(final Supplier<? extends Throwable> exceptionSupplier)
+  public T orElseThrow(final FailableSupplier<? extends Throwable, ? extends Throwable> exceptionSupplier)
   {
     return val;
   }
@@ -343,14 +343,14 @@ public class Try<T>
     }
 
     @Override
-    public Try<T> ifSuccessful(final Consumer<? super T> consumer)
+    public Try<T> ifSuccessful(final FailableConsumer<? super T, ? extends Throwable> consumer)
     {
       return this;
     }
 
     @Override
-    public Try<T> ifSuccessfulOrElse(final Consumer<? super T> consumer,
-                                     final Consumer<? super T> failureConsumer)
+    public Try<T> ifSuccessfulOrElse(final FailableConsumer<? super T, ? extends Throwable> consumer,
+                                     final FailableConsumer<? super T, ? extends Throwable> failureConsumer)
     {
       try
       {
@@ -363,8 +363,8 @@ public class Try<T>
       }
     }
     @Override
-    public Try<T> ifSuccessfulOrElse(final Consumer<? super T> consumer,
-                                     final BiConsumer<? super Throwable, ? super T> failureConsumer)
+    public Try<T> ifSuccessfulOrElse(final FailableConsumer<? super T, ? extends Throwable> consumer,
+                                     final FailableBiConsumer<? super Throwable, ? super T, ? extends Throwable> failureConsumer)
     {
       try
       {
@@ -378,8 +378,8 @@ public class Try<T>
     }
 
     @Override
-    public Try<T> ifSuccessfulOrElseDo(final Consumer<? super T> consumer,
-                                       final Runnable failureAction)
+    public Try<T> ifSuccessfulOrElseDo(final FailableConsumer<? super T, ? extends Throwable> consumer,
+                                       final FailableRunnable<? extends Throwable> failureAction)
     {
       try
       {
@@ -394,13 +394,13 @@ public class Try<T>
 
     @SuppressWarnings("unchecked")
     @Override
-    public <R, V extends Try<R>> V ifSuccessfulGet(final Supplier<? extends R> supplier)
+    public <R, V extends Try<R>> V ifSuccessfulGet(final FailableSupplier<? extends R, ? extends Throwable> supplier)
     {
       return (V) this;
     }
 
     @Override
-    public Try<T> ifFailure(final Consumer<? super Throwable> consumer)
+    public Try<T> ifFailure(final FailableConsumer<? super Throwable, ? extends Throwable> consumer)
     {
       try
       {
@@ -414,7 +414,7 @@ public class Try<T>
     }
 
     @Override
-    public Try<T> ifFailure(final BiConsumer<? super Throwable, ? super T> consumer)
+    public Try<T> ifFailure(final FailableBiConsumer<? super Throwable, ? super T, ? extends Throwable> consumer)
     {
       try
       {
@@ -447,33 +447,33 @@ public class Try<T>
     }
 
     @Override
-    public Try<T> filter(final Predicate<? super T> predicate)
+    public Try<T> filter(final FailablePredicate<? super T, ? extends Throwable> predicate)
     {
       return this;
     }
     @Override
-    public Try<T> filter(final Predicate<? super T> predicate,
-                         final Supplier<? extends Throwable> throwableSupplier)
+    public Try<T> filter(final FailablePredicate<? super T, ? extends Throwable> predicate,
+                         final FailableSupplier<? extends Throwable, ? extends Throwable> throwableSupplier)
     {
       return this;
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public <R, V extends Try<R>> V map(final Function<? super T, ? extends R> mapper)
+    public <R, V extends Try<R>> V map(final FailableFunction<? super T, ? extends R, ? extends Throwable> mapper)
     {
       return (V) this;
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public <R, V extends Try<R>> V flatMap(final Function<? super T, ? extends V> mapper)
+    public <R, V extends Try<R>> V flatMap(final FailableFunction<? super T, ? extends V, ? extends Throwable> mapper)
     {
       return (V) this;
     }
 
     @Override
-    public Try<T> or(final Supplier<Try<T>> supplier)
+    public Try<T> or(final FailableSupplier<? extends Try<T>, ? extends Throwable> supplier)
     {
       try
       {
@@ -500,7 +500,7 @@ public class Try<T>
     }
 
     @Override
-    public T orElseGet(final Supplier<? extends T> supplier)
+    public T orElseGet(final FailableSupplier<? extends T, ? extends Throwable> supplier)
     {
       try
       {
@@ -519,9 +519,16 @@ public class Try<T>
     }
 
     @Override
-    public T orElseThrow(final Supplier<? extends Throwable> exceptionSupplier)
+    public T orElseThrow(final FailableSupplier<? extends Throwable, ? extends Throwable> exceptionSupplier)
     {
-      throw ExceptionUtil.throwAsUnchecked(Objects.requireNonNull(exceptionSupplier).get());
+      try
+      {
+        throw exceptionSupplier.get();
+      }
+      catch (Throwable t)
+      {
+        throw ExceptionUtil.throwAsUnchecked(t);
+      }
     }
   }
 }

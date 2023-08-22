@@ -2,11 +2,11 @@ package monads;
 
 import functions.arity.VariadicConsumer;
 import functions.arity.VariadicFunction;
-import util.tuples.Pair;
+import org.apache.commons.lang3.function.*;
 import org.testng.annotations.Test;
+import util.tuples.Pair;
 
 import java.util.*;
-import java.util.function.*;
 import java.util.stream.Collectors;
 
 import static org.testng.Assert.*;
@@ -16,20 +16,20 @@ public class TryTest
 {
   private static final String KABLOOEY = "kablooey!";
   private static final RuntimeException KABLOOEY_EXCEPTION = new RuntimeException(KABLOOEY);
-  private static final Consumer<Integer> KABLOOEY_CONSUMER = i -> {throw KABLOOEY_EXCEPTION;};
-  private static final Supplier<Integer> KABLOOEY_SUPPLIER = () -> {throw KABLOOEY_EXCEPTION;};
-  private static final BiConsumer<Throwable, Integer> KABLOOEY_BICONSUMER = (e, i) -> {throw KABLOOEY_EXCEPTION;};
+  private static final FailableConsumer<Integer, Exception> KABLOOEY_CONSUMER = i -> {throw KABLOOEY_EXCEPTION;};
+  private static final FailableSupplier<Integer, Exception> KABLOOEY_SUPPLIER = () -> {throw KABLOOEY_EXCEPTION;};
+  private static final FailableBiConsumer<Throwable, Integer, Exception> KABLOOEY_BICONSUMER = (e, i) -> {throw KABLOOEY_EXCEPTION;};
   private static final VariadicConsumer<Integer> KABLOOEY_VARCONSUMER = vals -> {throw KABLOOEY_EXCEPTION;};
-  private static final Supplier<Integer> KABLOOEY_INTSUPPLIER = () -> {throw KABLOOEY_EXCEPTION;};
-  private static final Supplier<Try<Integer>> KABLOOEY_TRYSUPPLIER = () -> {throw KABLOOEY_EXCEPTION;};
-  private static final Function<Integer, Integer> KABLOOEY_FUNCTION = i -> {throw KABLOOEY_EXCEPTION;};
+  private static final FailableSupplier<Integer, Exception> KABLOOEY_INTSUPPLIER = () -> {throw KABLOOEY_EXCEPTION;};
+  private static final FailableSupplier<Try<Integer>, Exception> KABLOOEY_TRYSUPPLIER = () -> {throw KABLOOEY_EXCEPTION;};
+  private static final FailableFunction<Integer, Integer, Exception> KABLOOEY_FUNCTION = i -> {throw KABLOOEY_EXCEPTION;};
   private static final VariadicFunction<Integer, String> KABLOOEY_VARFUNCTION = (Integer... array) -> {throw KABLOOEY_EXCEPTION;};
-  private static final Predicate<Integer> KABLOOEY_PREDICATE = i -> {throw KABLOOEY_EXCEPTION;};
-  private static final Runnable KABLOOEY_RUNNABLE = () -> {throw KABLOOEY_EXCEPTION;};
-  private static final Supplier<Throwable> SUPPLY_KABLOOEY = () -> KABLOOEY_EXCEPTION;
-  public static final Runnable GOOD_RUNNABLE = () -> {};
-  private static final Function<Integer, Try<Integer>> GOOD_FLATMAP = val -> Try.ofFunction(i -> i / 2, val);
-  private static final Function<Integer, Try<Integer>> BAD_FLATMAP = val -> Try.ofFunction(i -> i / 0, val);
+  private static final FailablePredicate<Integer, Exception> KABLOOEY_PREDICATE = i -> {throw KABLOOEY_EXCEPTION;};
+  private static final FailableRunnable<Exception> KABLOOEY_RUNNABLE = () -> {throw KABLOOEY_EXCEPTION;};
+  private static final FailableSupplier<Throwable, Exception> SUPPLY_KABLOOEY = () -> KABLOOEY_EXCEPTION;
+  public static final FailableRunnable<Exception> GOOD_RUNNABLE = () -> {};
+  private static final FailableFunction<Integer, Try<Integer>, Exception> GOOD_FLATMAP = val -> Try.ofFunction(i -> i / 2, val);
+  private static final FailableFunction<Integer, Try<Integer>, Exception> BAD_FLATMAP = val -> Try.ofFunction(i -> i / 0, val);
 
   /**
    * Demonstrates {@link Try#of(Object)}
@@ -46,7 +46,7 @@ public class TryTest
   }
 
   /**
-   * Demonstrates {@link Try#ofSupplier(Supplier)}
+   * Demonstrates {@link Try#ofSupplier(FailableSupplier)}
    */
   @Test
   public void test_ofSupplier()
@@ -68,7 +68,7 @@ public class TryTest
   }
 
   /**
-   * Demonstrates {@link Try#ofFunction(Function, Object)}
+   * Demonstrates {@link Try#ofFunction(FailableFunction, Object)}
    */
   @Test
   public void test_ofFunction()
@@ -116,15 +116,14 @@ public class TryTest
   }
 
   /**
-   * Demonstrates {@link Try#ofConsumer(Consumer, Object)}
+   * Demonstrates {@link Try#ofConsumer(FailableConsumer, Object)}
    */
   @Test
   public void test_ofConsumer()
   {
     final Set<Integer> ints = new HashSet<>();
-    final Consumer<Integer> goodConsumer = ints::add;
 
-    final Try<Integer> ts = Try.ofConsumer(goodConsumer, 1);
+    final Try<Integer> ts = Try.ofConsumer(ints::add, 1);
     assertTrue(ts.isSuccessful());
     assertFalse(ts.isFailure());
     assertTrue(ts.getFailure().isEmpty());
@@ -168,7 +167,7 @@ public class TryTest
   }
 
   /**
-   * Demonstrates {@link Try#ofRunnable(Runnable)}
+   * Demonstrates {@link Try#ofRunnable(FailableRunnable)}
    */
   @Test
   public void test_ofRunnable()
@@ -198,7 +197,7 @@ public class TryTest
   }
 
   /**
-   * Demonstrates {@link Try#ifSuccessful(Consumer)}
+   * Demonstrates {@link Try#ifSuccessful(FailableConsumer)}
    */
   @Test
   public void test_ifSuccessful()
@@ -224,18 +223,16 @@ public class TryTest
   }
 
   /**
-   * Demonstrates {@link Try#ifSuccessfulOrElse(Consumer, Consumer)}
+   * Demonstrates {@link Try#ifSuccessfulOrElse(FailableConsumer, FailableConsumer)}
    */
   @Test
   public void test_ifSuccessfulOrElse_Consumer()
   {
-    final Consumer<Integer> goodConsumer = i -> {};
-
     final Set<Integer> ints = new HashSet<>();
     final Set<Integer> failedDivisors = new HashSet<>();
 
     // Good consumer
-    Try.ofConsumer(goodConsumer, 2).ifSuccessfulOrElse(ints::add, failedDivisors::add);
+    Try.ofConsumer(i -> {}, 2).ifSuccessfulOrElse(ints::add, failedDivisors::add);
     assertEquals(ints.size(), 1);
     assertTrue(ints.contains(2));
 
@@ -260,18 +257,16 @@ public class TryTest
   }
 
   /**
-   * Demonstrates {@link Try#ifSuccessfulOrElse(Consumer, BiConsumer)}
+   * Demonstrates {@link Try#ifSuccessfulOrElse(FailableConsumer, FailableBiConsumer)}
    */
   @Test
   public void test_ifSuccessfulOrElse_BiConsumer()
   {
-    final Consumer<Integer> goodConsumer = i -> {};
-
     final Set<Integer> ints = new HashSet<>();
     final Set<Pair<Throwable, Integer>> failedDivisors = new HashSet<>();
 
     // Good consumer
-    Try.ofConsumer(goodConsumer, 2).ifSuccessfulOrElse(ints::add, (e, i) -> failedDivisors.add(new Pair<>(e, i)));
+    Try.ofConsumer(i -> {}, 2).ifSuccessfulOrElse(ints::add, (e, i) -> failedDivisors.add(new Pair<>(e, i)));
     assertEquals(ints.size(), 1);
     assertTrue(ints.contains(2));
 
@@ -298,7 +293,7 @@ public class TryTest
   }
 
   /**
-   * Demonstrates {@link Try#ifSuccessfulOrElseDo(Consumer, Runnable)}
+   * Demonstrates {@link Try#ifSuccessfulOrElseDo(FailableConsumer, FailableRunnable)}
    */
   @Test
   public void test_ifSuccessfulOrElseDo()
@@ -324,7 +319,7 @@ public class TryTest
   }
 
   /**
-   * Demonstrates {@link Try#ifSuccessfulGet(Supplier)}
+   * Demonstrates {@link Try#ifSuccessfulGet(FailableSupplier)}
    */
   @Test
   public void test_ifSuccessfulGet()
@@ -359,7 +354,7 @@ public class TryTest
   }
 
   /**
-   * Demonstrates {@link Try#ifFailure(Consumer)}
+   * Demonstrates {@link Try#ifFailure(FailableConsumer)}
    */
   @Test
   public void test_ifFailure_Consumer()
@@ -375,7 +370,7 @@ public class TryTest
 
     // Null consumer
     final Try<Integer> tf = Try.ofFunction(i -> i / 0, 4)
-        .ifFailure((Consumer<? super Throwable>) null);
+        .ifFailure((FailableConsumer<? super Throwable, ? extends Throwable>) null);
     assertTrue(tf.isFailure());
     final Pair<Object, Throwable> failure = tf.getFailure().orElseThrow();
     assertEquals(failure.getA(), 4);
@@ -383,14 +378,14 @@ public class TryTest
   }
 
   /**
-   * Demonstrates {@link Try#ifFailure(BiConsumer)}
+   * Demonstrates {@link Try#ifFailure(FailableBiConsumer)}
    */
   @Test
   public void test_ifFailure_BiConsumer()
   {
     final Set<Throwable> errors = new HashSet<>();
     final Set<Integer> errorDivisors = new HashSet<>();
-    final BiConsumer<Throwable, Integer> biConsumer = (e, i) -> {
+    final FailableBiConsumer<Throwable, Integer, Exception> biConsumer = (e, i) -> {
       errors.add(e);
       errorDivisors.add(i);
     };
@@ -407,7 +402,7 @@ public class TryTest
 
     // Null consumer for FailedFunction
     final Try<Integer> tf = Try.ofFunction(i -> i / 0, 4)
-        .ifFailure((BiConsumer<? super Throwable, ? super Integer>) null);
+        .ifFailure((FailableBiConsumer<? super Throwable, ? super Integer, ? extends Throwable>) null);
     assertTrue(tf.isFailure());
     final Pair<Object, Throwable> failure = tf.getFailure().orElseThrow();
     assertEquals(failure.getA(), 4);
@@ -415,7 +410,7 @@ public class TryTest
 
     // Null consumer for FailedConsumer
     final Try<Integer> tf2 = Try.ofConsumer(KABLOOEY_CONSUMER, 4)
-        .ifFailure((BiConsumer<? super Throwable, ? super Integer>) null);
+        .ifFailure((FailableBiConsumer<? super Throwable, ? super Integer, ? extends Throwable>) null);
     assertTrue(tf2.isFailure());
     final Pair<Object, Throwable> failure2 = tf2.getFailure().orElseThrow();
     assertEquals(failure2.getA(), 4);
@@ -470,7 +465,7 @@ public class TryTest
   }
 
   /**
-   * Demonstrates {@link Try#filter(Predicate)}
+   * Demonstrates {@link Try#filter(FailablePredicate)}
    */
   @Test
   public void test_filter()
@@ -551,7 +546,7 @@ public class TryTest
   }
 
   /**
-   * Demonstrates {@link Try#map(Function)}
+   * Demonstrates {@link Try#map(FailableFunction)}
    */
   @Test
   public void test_map()
@@ -591,7 +586,7 @@ public class TryTest
   }
 
   /**
-   * Demonstrates {@link Try#flatMap(Function)}
+   * Demonstrates {@link Try#flatMap(FailableFunction)}
    */
   @Test
   public void test_flatMap()
@@ -631,7 +626,7 @@ public class TryTest
   }
 
   /**
-   * Demonstrates {@link Try#or(Supplier)}
+   * Demonstrates {@link Try#or(FailableSupplier)}
    */
   @Test
   public void test_or()
@@ -702,7 +697,7 @@ public class TryTest
   }
 
   /**
-   * Demonstrates {@link Try#orElseGet(Supplier)}
+   * Demonstrates {@link Try#orElseGet(FailableSupplier)}
    */
   @Test(expectedExceptions = RuntimeException.class, expectedExceptionsMessageRegExp = KABLOOEY)
   public void test_orElseGet()
@@ -731,7 +726,7 @@ public class TryTest
   }
 
   /**
-   * Demonstrates {@link Try#orElseThrow(Supplier)}
+   * Demonstrates {@link Try#orElseThrow(FailableSupplier)}
    */
   @Test(expectedExceptions = RuntimeException.class, expectedExceptionsMessageRegExp = KABLOOEY)
   public void test_orElseThrow_Supplier()
