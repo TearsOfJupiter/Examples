@@ -3,6 +3,7 @@ package util.tuples;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotEquals;
 
 public class TuplesTest
 {
@@ -27,5 +28,17 @@ public class TuplesTest
     assertEquals(triplet.getA(), "a");
     assertEquals(triplet.getB(), "b");
     assertEquals(triplet.getC(), "c");
+  }
+
+  @SuppressWarnings("AssertBetweenInconvertibleTypes")
+  @Test
+  public void test_equals()
+  {
+    final Pair<String, Integer> pair1 = new Pair<>("1", 1);
+    final Pair<String, Integer> pair2 = new Pair<>("1", 1);
+    final Pair<String, Integer> pair3 = new Pair<>("2", 2);
+    assertEquals(pair1, pair2);
+    assertNotEquals(pair1, pair3);
+    assertNotEquals(pair1, "And now, for something completely different");
   }
 }
