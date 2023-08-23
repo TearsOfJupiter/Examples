@@ -4,12 +4,11 @@ import util.tuples.Pair;
 import monads.Try;
 import org.testng.annotations.Test;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.*;
 
 public class CollectionUtilsTest
 {
@@ -71,6 +70,22 @@ public class CollectionUtilsTest
     assertTrue(Try.ofSupplier(() -> CollectionUtils.mapToList(null, null)).isFailure());
     assertTrue(CollectionUtils.<String, Integer>mapToList(null, Integer::parseInt).isEmpty());
     assertEquals(CollectionUtils.mapToList(List.of("1", "2", "3"), Integer::parseInt), List.of(1, 2, 3));
+  }
+
+  @Test
+  public void test_first()
+  {
+    assertNull(CollectionUtils.first(null));
+    assertNull(CollectionUtils.first(Collections.emptyList()));
+
+    final List<String> strings = List.of("1", "2", "3");
+    assertEquals(CollectionUtils.first(strings), "1");
+
+    final Set<Integer> ints = Set.of(1, 2, 3);
+    assertNotNull(CollectionUtils.first(ints)); // Set has non-deterministic ordering/access
+
+    final Set<Integer> linkedInts = Stream.of(1, 2, 3).collect(Collectors.toCollection(LinkedHashSet::new));
+    assertEquals(CollectionUtils.first(linkedInts), 1);
   }
 
   /* *******************************************************************************************************************

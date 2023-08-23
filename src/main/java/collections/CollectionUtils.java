@@ -74,6 +74,13 @@ public class CollectionUtils
         .collect(Collectors.toList());
   }
 
+  public static <T> T first(final Collection<? extends T> collection)
+  {
+    return defaultStream(collection)
+        .findFirst()
+        .orElse(null);
+  }
+
   /* *******************************************************************************************************************
    *                                            COMBINATORICS METHODS
    * ***************************************************************************************************************** */
