@@ -1,4 +1,4 @@
-package funwithmath;
+package katas;
 
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;

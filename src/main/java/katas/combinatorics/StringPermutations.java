@@ -1,4 +1,4 @@
-package funwithmath.combinatorics;
+package katas.combinatorics;
 
 import java.util.ArrayList;
 import java.util.Collections;
